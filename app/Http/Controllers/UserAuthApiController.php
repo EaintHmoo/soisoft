@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,6 +25,11 @@ class UserAuthApiController extends Controller
         ]);
 
         // $user->roles()->sync(2);
+
+        DB::table('roles')->insertGetId([
+            'guard_name' => 'api',
+            'name'       => 'supplier',
+        ]);
 
         return response()
             ->json([
