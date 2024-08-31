@@ -55,6 +55,7 @@ class TenderResource extends JsonResource
             'awarding_agency'   => $this->awarding_agency,
             'publication_check_list'    => $this->publication_check_list,
             'tender_state'  => $this->tender_state,
+            'tender_status'  => $this->tender_status,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'tender_items' => TenderDetailResource::collection($this->tenderItems),

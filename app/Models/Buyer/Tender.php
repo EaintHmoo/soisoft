@@ -45,6 +45,7 @@ class Tender extends Model
         'awarding_agency',
         'publication_check_list',
         'tender_state',
+        'tender_status',
     ];
 
     protected $casts = [

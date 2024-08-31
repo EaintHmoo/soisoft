@@ -94,7 +94,7 @@ class TenderResource extends Resource
                                         $set('tender_sub_category_id', null);
                                     })
                                     ->label('Tender Category')
-                                    ->required()
+                                    // ->required()
                                     ->searchable(),
 
                                 Select::make('tender_sub_category_id') //category data from admin dashboard
