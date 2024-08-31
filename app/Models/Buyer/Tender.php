@@ -3,6 +3,7 @@
 namespace App\Models\Buyer;
 
 use App\Models\Admin\TenderCategory;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -84,6 +85,11 @@ class Tender extends Model
     public function documents(): BelongsToMany
     {
         return $this->belongsToMany(Document::class, 'tender_document');
+    }
+
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'bidder_details','tender_id','supplier_id');
     }
 
     public function tenderItems(): HasMany

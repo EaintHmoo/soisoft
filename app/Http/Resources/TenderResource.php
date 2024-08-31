@@ -61,6 +61,9 @@ class TenderResource extends JsonResource
             'tender_items' => TenderDetailResource::collection($this->tenderItems),
             'tender_contacts' => $this->contacts,
             'documents' => DocumentResource::collection($this->documents),
+            'suppliers' => $this->suppliers->map(function($value){
+                return $value?->name;
+            }),
         ];
     }
 }
