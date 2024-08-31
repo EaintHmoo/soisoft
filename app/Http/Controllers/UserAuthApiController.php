@@ -24,12 +24,17 @@ class UserAuthApiController extends Controller
             'password' => Hash::make($registerUserData['password']),
         ]);
 
-        // $user->roles()->sync(2);
+        // $is_already_exist = DB::table('roles')
+        // ->where('name','supplier')
+        // ->where('guard_name')->exists();
 
-        DB::table('roles')->insertGetId([
-            'guard_name' => 'api',
-            'name'       => 'supplier',
-        ]);
+        // if(!$is_already_exist)
+        // {
+        //     DB::table('roles')->insertGetId([
+        //         'guard_name' => 'api',
+        //         'name'       => 'supplier',
+        //     ]);
+        // }
 
         return response()
             ->json([
