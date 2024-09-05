@@ -4,6 +4,7 @@ namespace App\Models\Buyer;
 
 use App\Models\Admin\TenderCategory;
 use App\Models\User;
+use App\Models\Admin\Category;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -24,8 +25,8 @@ class Tender extends Model
         'type_of_sourcing',
         'evaluation_type',
         'tender_title',
-        'tender_category_id',
-        'tender_sub_category_id',
+        'category_id',
+        'sub_category_id',
         'start_datetime',
         'end_datetime',
         'currency',
@@ -59,12 +60,12 @@ class Tender extends Model
 
     public function category(): BelongsTo 
     {
-        return $this->belongsTo(TenderCategory::class, 'tender_category_id');
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function subCategory(): BelongsTo 
     {
-        return $this->belongsTo(TenderCategory::class, 'tender_sub_category_id');
+        return $this->belongsTo(Category::class, 'sub_category_id');
     }
 
     public function tenderContacts(): HasMany

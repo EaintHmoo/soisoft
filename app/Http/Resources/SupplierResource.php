@@ -20,7 +20,7 @@ class SupplierResource extends JsonResource
             'supplier_id'   => $this->supplier_id,
             'supplier'   => $this->supplier?->name,
             'supplier_type' => $this->supplier_type,
-            'business_type' => $this->business_type,
+            'business_type' => $this->business_type_name?->name,
             'registration_number'   => $this->registration_number,
             'vat_number'    => $this->vat_number,
             'company_name'  => $this->company_name,
@@ -34,7 +34,7 @@ class SupplierResource extends JsonResource
             'primary_contact_province'  => $this->primary_contact_province,
             'primary_contact_city'  => $this->primary_contact_city,
             'primary_contact_postal_code'   => $this->primary_contact_postal_code,
-            'primary_contact_country'   => $this->primary_contact_country,
+            'primary_contact_country'   => $this->primary_contact_country_name?->name,
             'supplier_industry' => $this->supplier_industry,
 
             'company_contact_full_name' => $this->company_contact_full_name,
@@ -46,7 +46,7 @@ class SupplierResource extends JsonResource
             'company_contact_province'  => $this->company_contact_province,
             'company_contact_city'  => $this->company_contact_city,
             'company_contact_postal_code'   => $this->company_contact_postal_code,
-            'company_contact_country'   => $this->company_contact_country,
+            'company_contact_country'   => $this->company_contact_country_name?->name,
 
             'individual_contact_full_name'  => $this->individual_contact_full_name,
             'individual_contact_designation'    => $this->individual_contact_designation,
@@ -54,8 +54,9 @@ class SupplierResource extends JsonResource
             'individual_contact_email'  => $this->individual_contact_email,
             'individual_contact_address'    => $this->individual_contact_address,
 
-            'supplier_industries'  => $this->supplier_industry,
-            'category'  => $this->category,
+            'supplier_industries'  => $this->supplier_industries,
+            'supplier_category'  => $this->supplier_category_name?->name,
+            'supplier_sub_category'  => $this->supplier_sub_category_name?->name,
         ];
     }
 }

@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tender_categories', function (Blueprint $table) {
+        Schema::create('supplier_business_types', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->nullable()->unique();
             $table->string('name');
-            $table->string('slug');
-            $table->bigInteger('parent_id')->default('-1');
-            $table->unsignedInteger('order')->default('0');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tender_categories');
+        Schema::dropIfExists('supplier_business_types');
     }
 };

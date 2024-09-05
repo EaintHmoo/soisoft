@@ -49,10 +49,47 @@ class SupplierInfo extends Model
         'individual_contact_address',
 
         'category',
+
+        'business_type_id',
+        'primary_contact_country_id',
+        'company_contact_country_id',
+        'supplier_category_id',
+        'supplier_sub_category_id',
     ];
 
 
-    public function supplier(){
-        return $this->belongsTo(User::class,'supplier_id','id');
+    public function supplier()
+    {
+        return $this->belongsTo(User::class, 'supplier_id', 'id');
+    }
+
+    public function business_type_name()
+    {
+        return $this->belongsTo(SupplierBusinessType::class, 'business_type_id', 'id');
+    }
+
+    public function primary_contact_country_name()
+    {
+        return $this->belongsTo(Country::class, 'supplier_category_id', 'id');
+    }
+
+    public function company_contact_country_name()
+    {
+        return $this->belongsTo(Country::class, 'company_contact_country_id', 'id');
+    }
+
+    public function supplier_category_name()
+    {
+        return $this->belongsTo(SupplierCategory::class, 'supplier_category_id', 'id');
+    }
+
+    public function supplier_sub_category_name()
+    {
+        return $this->belongsTo(SupplierCategory::class, 'supplier_sub_category_id', 'id');
+    }
+
+    public function supplier_industries()
+    {
+        return $this->belongsToMany(SupplierIndustry::class, 'supplier_info_industry', 'supplier_info_id', 'supplier_industry_id');
     }
 }

@@ -38,16 +38,16 @@ return new class extends Migration
             $table->string('evaluation_type', 20);
             $table->string('tender_title', 100);
 
-            $table->foreignId('tender_category_id')
+            $table->foreignId('category_id')
                 ->nullable()
                 ->references('id')
-                ->on('tender_categories')
+                ->on('categories')
                 ->onDelete('set null');
 
-            $table->foreignId('tender_sub_category_id')
+            $table->foreignId('sub_category_id')
                 ->nullable()
                 ->references('id')
-                ->on('tender_categories')
+                ->on('categories')
                 ->onDelete('set null');
 
             $table->dateTime('start_datetime');
@@ -75,6 +75,7 @@ return new class extends Migration
             $table->json('publication_check_list')->nullable();
             $table->enum('tender_state', ['draft', 'review', 'approved', 'published'])->default('draft');
 
+            $table->softDeletes();
             $table->timestamps();
         });
         
@@ -113,6 +114,7 @@ return new class extends Migration
             $table->text('specifications')->nullable();
             $table->text('description')->nullable();
             $table->text('notes_to_supplier')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

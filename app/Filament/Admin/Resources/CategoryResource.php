@@ -11,17 +11,17 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Resources\Resource;
 use Filament\Tables\Grouping\Group;
-use App\Models\Admin\TenderCategory;
+use App\Models\Admin\Category;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Admin\Resources\TenderCategoryResource\Pages;
+use App\Filament\Admin\Resources\CategoryResource\Pages;
 use App\Filament\Admin\Resources\CategoryResource\RelationManagers;
 
-class TenderCategoryResource extends Resource
+class CategoryResource extends Resource
 {
-    protected static ?string $model = TenderCategory::class;
+    protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -36,17 +36,18 @@ class TenderCategoryResource extends Resource
                         titleAttribute: 'name',
                         modifyQueryUsing: fn (Builder $query) => $query->where('parent_id', -1),
                     )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->name} ({$record->key})")
+                    // ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->name} ({$record->key})")
                     ->searchable()
+                    ->preload()
                     ->native(false),
                 
-                Forms\Components\TextInput::make('key')
-                    ->placeholder('Parent Key')
-                    ->unique(
-                        table: TenderCategory::class, 
-                        column: 'key', 
-                        ignoreRecord: true
-                    ),
+                // Forms\Components\TextInput::make('key')
+                //     ->placeholder('Parent Key')
+                //     ->unique(
+                //         table: Category::class, 
+                //         column: 'key', 
+                //         ignoreRecord: true
+                //     ),
 
                 Forms\Components\TextInput::make('name')
                     ->placeholder('TV & Home Appliances')
@@ -73,8 +74,8 @@ class TenderCategoryResource extends Resource
             ->groups([
                 Group::make('parent.id')
                     ->titlePrefixedWithLabel(false)
-                    ->getTitleFromRecordUsing(function (TenderCategory $record) {
-                        if(!is_null($record->parent)) return "{$record->parent->name} (Key - {$record->parent->key})";
+                    ->getTitleFromRecordUsing(function (Category $record) {
+                        if(!is_null($record->parent)) return "{$record->parent->name}";
 
                         return 'Parent Categories';
                     }),
@@ -107,7 +108,7 @@ class TenderCategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageTenderCategories::route('/'),
+            'index' => Pages\ManageCategories::route('/'),
         ];
     }
 }

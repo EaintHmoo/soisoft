@@ -892,5 +892,15 @@ class PrePopulatedDataSeeder extends Seeder
         foreach($submission_modes as $submission_mode) {
             PrePopulatedData::create($submission_mode);
         }
+
+        PrePopulatedData::create(
+            [
+                'type' => 'expected_delivery_date',
+                'data' => [
+                    'label' => '30 days after PO',
+                    'description' => '30 days after PO',
+                ]
+            ],
+        );
     }
 }

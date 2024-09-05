@@ -83,7 +83,7 @@ class TenderResource extends Resource
                                     ->columnSpanFull()
                                     ->placeholder('Placeholder'),
                                     
-                                Select::make('tender_category_id') 
+                                Select::make('category_id') 
                                     ->relationship(
                                         name: 'category', 
                                         titleAttribute: 'name',
@@ -91,18 +91,19 @@ class TenderResource extends Resource
                                     )
                                     ->live()
                                     ->afterStateUpdated(function (Set $set) {
-                                        $set('tender_sub_category_id', null);
+                                        $set('sub_category_id', null);
                                     })
                                     ->label('Tender Category')
-                                    // ->required()
+                                    ->preload()
+                                    ->required()
                                     ->searchable(),
 
-                                Select::make('tender_sub_category_id') //category data from admin dashboard
+                                Select::make('sub_category_id') //category data from admin dashboard
                                     ->label('Tender Sub Category')
                                     ->relationship(
                                         name: 'subCategory', 
                                         titleAttribute: 'name',
-                                        modifyQueryUsing: fn (Builder $query, Get $get) => $query->where('parent_id', $get('tender_category_id'))
+                                        modifyQueryUsing: fn (Builder $query, Get $get) => $query->where('parent_id', $get('category_id'))
                                     )
                                     ->preload()
                                     ->searchable(),
@@ -375,7 +376,7 @@ class TenderResource extends Resource
                                     ->reorderable(false)
                                     ->collapsed()
                                     ->defaultItems(0)
-                                    ->addActionLabel('Add')
+                                    ->addActionLabel('Add new')
                                     ->itemLabel(fn (array $state): ?string => $state['specifications'] ?? null),
                             ])
                             ->columns(1),

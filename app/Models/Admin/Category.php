@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class TenderCategory extends Model
+class Category extends Model
 {
     use HasFactory;
 
-    protected $table = "tender_categories";
+    protected $table = "categories";
 
     protected $fillable = ['key', 'name', 'slug', 'parent_id', 'order'];
 

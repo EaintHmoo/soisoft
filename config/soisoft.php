@@ -10,6 +10,7 @@ return [
         'payment_term' => 'Payment Term',
         'payment_mode' => 'Payment Mode',
         'currency' => 'Currency',
-        'submission_mode' => 'Submission Mode'
+        'submission_mode' => 'Submission Mode',
+        'expected_delivery_date' => 'Expected Delivery Date'
     ]
 ];
