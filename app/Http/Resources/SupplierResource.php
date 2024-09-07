@@ -34,7 +34,7 @@ class SupplierResource extends JsonResource
             'primary_contact_province'  => $this->primary_contact_province,
             'primary_contact_city'  => $this->primary_contact_city,
             'primary_contact_postal_code'   => $this->primary_contact_postal_code,
-            'primary_contact_country'   => $this->primary_contact_country_name?->name,
+            'primary_contact_country'   => $this->primary_contact_country,
             'supplier_industry' => $this->supplier_industry,
 
             'company_contact_full_name' => $this->company_contact_full_name,
@@ -46,7 +46,7 @@ class SupplierResource extends JsonResource
             'company_contact_province'  => $this->company_contact_province,
             'company_contact_city'  => $this->company_contact_city,
             'company_contact_postal_code'   => $this->company_contact_postal_code,
-            'company_contact_country'   => $this->company_contact_country_name?->name,
+            'company_contact_country'   => $this->company_contact_country,
 
             'individual_contact_full_name'  => $this->individual_contact_full_name,
             'individual_contact_designation'    => $this->individual_contact_designation,

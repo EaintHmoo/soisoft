@@ -69,7 +69,8 @@ class SupplierApiController extends Controller
             'primary_contact_province'  => 'required',
             'primary_contact_city'  => 'required',
             'primary_contact_postal_code'   => 'required',
-            'primary_contact_country_id'   => 'required',
+            'primary_contact_country_id'   => 'nullable|numeric',
+            'primary_contact_country'   => 'required',
 
             'supplier_sub_category_id'   => 'required',
 
@@ -81,7 +82,8 @@ class SupplierApiController extends Controller
             'company_contact_province' => 'required',
             'company_contact_city' => 'required',
             'company_contact_postal_code' => 'required',
-            'company_contact_country_id' => 'required',
+            'company_contact_country_id' => 'nullable|numeric',
+            'company_contact_country' => 'required',
         ]);
         try {
             DB::beginTransaction();
@@ -104,6 +106,7 @@ class SupplierApiController extends Controller
                 'primary_contact_city'  => $request->primary_contact_city,
                 'primary_contact_postal_code'   => $request->primary_contact_postal_code,
                 'primary_contact_country_id'   => $request->primary_contact_country_id,
+                'primary_contact_country'   => $request->primary_contact_country,
 
                 'company_contact_full_name' => $request->company_contact_full_name,
                 'company_contact_designation'   => $request->company_contact_designation,
@@ -115,6 +118,7 @@ class SupplierApiController extends Controller
                 'company_contact_city'  => $request->company_contact_city,
                 'company_contact_postal_code'   => $request->company_contact_postal_code,
                 'company_contact_country_id'   => $request->company_contact_country_id,
+                'company_contact_country'   => $request->company_contact_country,
                 'supplier_category_id'  => $request->supplier_category_id,
                 'supplier_sub_category_id'  => $request->supplier_sub_category_id,
 
