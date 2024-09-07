@@ -24,6 +24,8 @@ Route::group(['as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
 
     Route::get('tenders', [TenderApiController::class, 'getTenders']);
     Route::get('tenders/{id}', [TenderApiController::class, 'getTenderDetail']);
+    Route::get('tender-questions/{tender_id}', [TenderApiController::class, 'getTenderQuestions']);
+    Route::post('tender-questions/{tender_id}', [TenderApiController::class, 'createTenderQuestion']);
 
     Route::get('supplier-business-types', [SupplierPreRequiredDataApiController::class, 'getSupplierBusinessTypeList']);
     Route::get('supplier-countries', [SupplierPreRequiredDataApiController::class, 'getCountryList']);

@@ -117,25 +117,19 @@ class SupplierDataSeeder extends Seeder
         $supplier_business_types = [
             [
                 'id'         => 1,
-                'name'       => 'Construction',
+                'name'       => 'Information Technology',
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id'         => 2,
-                'name'       => 'IT',
+                'name'       => 'Furniture',
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id'         => 3,
-                'name'       => 'Electronic',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'id'         => 4,
-                'name'       => 'Trading',
+                'name'       => 'Office Supply',
                 'created_at' => now(),
                 'updated_at' => now()
             ],

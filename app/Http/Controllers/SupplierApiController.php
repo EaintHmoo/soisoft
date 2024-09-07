@@ -45,7 +45,6 @@ class SupplierApiController extends Controller
                 ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e);
             return response()
                 ->json([
                     'message' => 'Fail to create',
