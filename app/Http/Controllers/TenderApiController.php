@@ -14,7 +14,25 @@ class TenderApiController extends Controller
 {
     public function getTenders(Request $request)
     {
-        $data = Tender::paginate(10);
+        $data = Tender::with([
+            'tenderItems',
+            'documents',
+            'category',
+            'subCategory',
+            'department',
+            'project',
+            'tenderContacts'
+        ])
+            ->when($request->keyword ?? '', function ($query) use ($request) {
+                $query->where('tender_no', 'like', '%' . $request->keyword . '%')
+                    ->orWhere('tender_title', 'like', '%' . $request->keyword . '%')
+                    ->orWhere('mode_of_submission', 'like', '%' . $request->keyword . '%')
+                    ->orWhereRelation('department', 'name', 'like', '%' . $request->keyword . '%')
+                    ->orWhereRelation('category', 'name', 'like', '%' . $request->keyword . '%')
+                    ->orWhereRelation('subCategory', 'name', 'like', '%' . $request->keyword . '%');
+            })
+            ->orderBy('start_datetime', 'desc')
+            ->paginate(10);
         return response()
             ->json([
                 'data' => TenderResource::collection($data)->response()->getData(true),
@@ -24,7 +42,15 @@ class TenderApiController extends Controller
 
     public function getTenderDetail($id)
     {
-        $data = Tender::find($id);
+        $data = Tender::with([
+            'tenderItems',
+            'documents',
+            'category',
+            'subCategory',
+            'department',
+            'project',
+            'tenderContacts'
+        ])->find($id);
         return response()
             ->json([
                 'data' => new TenderResource($data),
@@ -34,7 +60,16 @@ class TenderApiController extends Controller
 
     public function getTenderQuestions(Request $request, $tender_id)
     {
-        $data = TenderQuestion::where('tender_id', $tender_id)->paginate(10);
+        $data = TenderQuestion::with([
+            'question_by',
+            'answer_by'
+        ])
+            ->where('tender_id', $tender_id)
+            ->when($request->keyword, function ($query) use ($request) {
+                $query->where('question', 'like', '%' . $request->keyword . '%')
+                    ->orWhere('answer', 'like', '%' . $request->keyword . '%');
+            })
+            ->paginate(10);
         return response()
             ->json([
                 'data' => TenderQuestionResource::collection($data)->response()->getData(true),
