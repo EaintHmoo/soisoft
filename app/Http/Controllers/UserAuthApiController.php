@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserAuthApiController extends Controller
@@ -18,29 +19,37 @@ class UserAuthApiController extends Controller
             'email' => 'required|string|email|unique:users',
             'password' => 'required|min:6'
         ]);
-        $user = User::create([
-            'name' => $registerUserData['name'],
-            'email' => $registerUserData['email'],
-            'password' => Hash::make($registerUserData['password']),
-        ]);
-
-        // $is_already_exist = DB::table('roles')
-        // ->where('name','supplier')
-        // ->where('guard_name')->exists();
-
-        // if(!$is_already_exist)
-        // {
-        //     DB::table('roles')->insertGetId([
-        //         'guard_name' => 'api',
-        //         'name'       => 'supplier',
-        //     ]);
-        // }
-
-        return response()
-            ->json([
-                'message' => 'Register Successfully!',
-                'status' => Response::HTTP_CREATED
+        try {
+            DB::beginTransaction();
+            $user = User::create([
+                'name' => $registerUserData['name'],
+                'email' => $registerUserData['email'],
+                'password' => Hash::make($registerUserData['password']),
             ]);
+
+            $is_already_exist = DB::table('roles')
+                ->where('name', 'supplier')
+                ->exists();
+
+            if (!$is_already_exist) {
+                Role::create(['name' => 'supplier']);
+            }
+
+            $user->assignRole('supplier');
+            DB::commit();
+            return response()
+                ->json([
+                    'message' => 'Register Successfully!',
+                    'status' => Response::HTTP_CREATED
+                ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()
+                ->json([
+                    'message' => 'Fail to register',
+                    'status' => 500
+                ], 500);
+        }
     }
 
     public function login(Request $request)
@@ -53,6 +62,13 @@ class UserAuthApiController extends Controller
         if (!$user || !Hash::check($loginUserData['password'], $user->password)) {
             return response()->json([
                 'message' => 'Email or password wrong!!',
+                'status' => Response::HTTP_UNAUTHORIZED,
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (!$user->hasRole('supplier')) {
+            return response()->json([
+                'message' => 'Login user must be supplier!!',
                 'status' => Response::HTTP_UNAUTHORIZED,
             ], Response::HTTP_UNAUTHORIZED);
         }
