@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('supplier_infos', function (Blueprint $table) {
-            $table->unsignedBigInteger('business_type_id')->nullable();
-            $table->unsignedBigInteger('primary_contact_country_id')->nullable();
-            $table->unsignedBigInteger('company_contact_country_id')->nullable();
+            $table->json('supplier_industries')->nullable();
             $table->unsignedBigInteger('supplier_category_id')->nullable();
             $table->unsignedBigInteger('supplier_sub_category_id')->nullable();
         });
@@ -26,9 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('supplier_infos', function (Blueprint $table) {
-            $table->dropColumn('business_type_id');
-            $table->dropColumn('primary_contact_country_id');
-            $table->dropColumn('company_contact_country_id');
+            $table->dropColumn('supplier_industries');
             $table->dropColumn('supplier_category_id');
             $table->dropColumn('supplier_sub_category_id');
         });

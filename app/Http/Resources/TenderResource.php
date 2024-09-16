@@ -45,9 +45,9 @@ class TenderResource extends JsonResource
             'briefing_date' => $this->briefing_date,
             'briefing_venue'    => $this->briefing_venue,
             'briefing_details'  => $this->briefing_details,
-            'briefing_documents'    => array_map(function($doc){
+            'briefing_documents'    => array_map(function ($doc) {
                 return $doc ? URL::to('/storage/' . $doc) : null;
-            },$this->briefing_documents),
+            }, $this->briefing_documents ?? []),
             'fees_required' => $this->fees_required,
             'tender_fees'   => $this->tender_fees,
             'tender_fees_information'   => $this->tender_fees_information,
@@ -61,7 +61,7 @@ class TenderResource extends JsonResource
             'tender_items' => TenderDetailResource::collection($this->tenderItems),
             'tender_contacts' => $this->contacts,
             'documents' => DocumentResource::collection($this->documents),
-            'suppliers' => $this->suppliers->map(function($value){
+            'suppliers' => $this->bidders->map(function ($value) {
                 return $value?->name;
             }),
         ];

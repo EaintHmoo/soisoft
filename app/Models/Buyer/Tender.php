@@ -3,8 +3,8 @@
 namespace App\Models\Buyer;
 
 use App\Models\Admin\TenderCategory;
-use App\Models\User;
 use App\Models\Admin\Category;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -58,12 +58,12 @@ class Tender extends Model
         'briefing_information_required' => 'boolean'
     ];
 
-    public function category(): BelongsTo 
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function subCategory(): BelongsTo 
+    public function subCategory(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'sub_category_id');
     }
@@ -73,7 +73,7 @@ class Tender extends Model
         return $this->hasMany(TenderContact::class, 'tender_id');
     }
 
-    public function tenderDocuments(): HasMany
+    public function documents(): HasMany
     {
         return $this->hasMany(TenderDocument::class, 'tender_id');
     }
@@ -83,14 +83,9 @@ class Tender extends Model
         return $this->belongsToMany(Contact::class, 'tender_contact');
     }
 
-    public function documents(): BelongsToMany
-    {
-        return $this->belongsToMany(Document::class, 'tender_document');
-    }
-
     public function suppliers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'bidder_details','tender_id','supplier_id');
+        return $this->belongsToMany(User::class, 'bidder_details', 'tender_id', 'supplier_id');
     }
 
     public function tenderItems(): HasMany
@@ -98,21 +93,25 @@ class Tender extends Model
         return $this->hasMany(TenderItem::class, 'tender_id');
     }
 
-    public function department(): BelongsTo 
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
 
-    public function project(): BelongsTo 
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function bidders(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'closed_tender_bidders', 'tender_id', 'supplier_id');
     }
 
     protected static function booted(): void
     {
         static::deleting(function (Tender $record) {
             $record->contacts()->detach();
-            $record->documents()->detach();
         });
     }
 }

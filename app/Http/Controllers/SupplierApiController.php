@@ -3,39 +3,46 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\SupplierResource;
-use App\Models\SupplierBusinessType;
+use App\Mail\SupplierRegisterMail;
+use Illuminate\Support\Str;
 use App\Models\SupplierInfo;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response;
+use Spatie\Permission\Models\Role;
 
 class SupplierApiController extends Controller
 {
     public function createIndividualRegister(Request $request)
     {
         $request->validate([
-            'business_type_id' => 'required',
-            'individual_contact_full_name' => 'required',
+            'business_type' => 'required',
+            'individual_contact_full_name' => 'required|string',
             'individual_contact_designation' => 'required',
             'individual_contact_phone' => 'required',
-            'individual_contact_email' => 'required|email',
+            'individual_contact_email' => 'required|string|email:rfc,dns|unique:users,email',
             'individual_contact_address' => 'required',
         ]);
-
         try {
             DB::beginTransaction();
+
+            $user = self::registerUser($request->individual_contact_full_name, $request->individual_contact_email);
+
             $data = SupplierInfo::create([
-                'supplier_id' => auth()->user()->id,
-                'business_type_id' => $request->business_type_id,
-                'business_type' => SupplierBusinessType::find($request->business_type_id)?->name ?? '',
+                'supplier_id' => $user->id,
+                'business_type' => $request->business_type,
                 'supplier_type' => "individual",
                 'individual_contact_full_name' => $request->individual_contact_full_name,
                 'individual_contact_designation' => $request->individual_contact_designation,
                 'individual_contact_phone' => $request->individual_contact_phone,
                 'individual_contact_email' => $request->individual_contact_email,
                 'individual_contact_address' => $request->individual_contact_address,
+                'supplier_industries' => $request->supplier_industries,
             ]);
-            $data->supplier_industries()->sync($request->supplier_industries);
+
             DB::commit();
             return response()
                 ->json([
@@ -56,15 +63,15 @@ class SupplierApiController extends Controller
     public function createCorporateRegister(Request $request)
     {
         $request->validate([
-            'business_type_id' => 'required',
+            'business_type' => 'required',
             'registration_number' => 'required',
             'vat_number' => 'required',
             'company_name' => 'required',
 
-            'primary_contact_full_name' => "required",
+            'primary_contact_full_name' => "required|string",
             'primary_contact_designation' => "required",
             'primary_contact_phone' => "required",
-            'primary_contact_email' => "required|email",
+            'primary_contact_email' => "required|string|email:rfc,dns|unique:users,email",
             'primary_contact_address1' => "required",
             'primary_contact_province'  => 'required',
             'primary_contact_city'  => 'required',
@@ -87,10 +94,10 @@ class SupplierApiController extends Controller
         ]);
         try {
             DB::beginTransaction();
+            $user = self::registerUser($request->primary_contact_full_name, $request->primary_contact_email);
             $data = SupplierInfo::create([
-                'supplier_id' => auth()->user()->id,
-                'business_type_id' => $request->business_type_id,
-                'business_type' => SupplierBusinessType::find($request->business_type_id)?->name ?? '',
+                'supplier_id' => $user->id,
+                'business_type' => $request->business_type,
                 'supplier_type' => "corporate",
                 'registration_number'   => $request->registration_number,
                 'vat_number'    => $request->vat_number,
@@ -123,7 +130,6 @@ class SupplierApiController extends Controller
                 'supplier_sub_category_id'  => $request->supplier_sub_category_id,
 
             ]);
-
             DB::commit();
             return response()
                 ->json([
@@ -139,5 +145,33 @@ class SupplierApiController extends Controller
                     'status' => 500
                 ], 500);
         }
+    }
+
+    public function registerUser($name, $email)
+    {
+        $password = Str::password(12);
+        $user = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make($password),
+        ]);
+
+        $is_already_exist = DB::table('roles')
+            ->where('name', 'supplier')
+            ->exists();
+
+        if (!$is_already_exist) {
+            Role::create(['name' => 'supplier']);
+        }
+
+        $user->assignRole('supplier');
+
+        Mail::to($email)->send(new SupplierRegisterMail([
+            'name' => $name,
+            'email' => $email,
+            'password' => $password,
+        ]));
+
+        return $user;
     }
 }

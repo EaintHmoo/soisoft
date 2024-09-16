@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin\PrePopulatedData;
 use App\Models\Country;
 use App\Models\SupplierBusinessType;
 use Illuminate\Http\Request;
@@ -12,7 +13,14 @@ class SupplierPreRequiredDataApiController extends Controller
 {
     public function getSupplierIndustryList()
     {
-        $data = SupplierIndustry::select('name', 'id')->orderBy('name', 'asc')->get();
+        $data = PrePopulatedData::where('type', 'supplier_industry')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item['id'] ?? '',
+                    'name' => $item['data']['label'] ?? '',
+                ];
+            });
         return response()
             ->json([
                 'data' => $data,
@@ -22,7 +30,14 @@ class SupplierPreRequiredDataApiController extends Controller
 
     public function getSupplierBusinessTypeList()
     {
-        $data = SupplierBusinessType::select('name', 'id')->orderBy('name', 'asc')->get();
+        $data = PrePopulatedData::where('type', 'business_type')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item['id'] ?? '',
+                    'name' => $item['data']['label'] ?? '',
+                ];
+            });
         return response()
             ->json([
                 'data' => $data,

@@ -58,16 +58,16 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('closed_quotation_bidders', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('quotation_id');
+            $table->unsignedBigInteger('supplier_id');
+            $table->timestamps();
+        });
+
         Schema::create('quotation_category', function(Blueprint $table) {
             $table->unsignedBigInteger('quotation_id');
             $table->unsignedBigInteger('category_id');
-        });
-
-        Schema::create('quotation_document', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('quotation_id');
-            $table->unsignedBigInteger('document_id'); 
-            $table->timestamps();
         });
 
         Schema::create('quotation_contact', function (Blueprint $table) {
@@ -110,6 +110,19 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+
+        Schema::create('quotation_documents', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('quotation_id')
+                ->references('id')
+                ->on('quotations')
+                ->onDelete('cascade');
+            $table->string('name');
+            $table->string('document_type', 50); //Specification, T & C , etc (get from config)
+            $table->string('document_path', 255);
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -117,7 +130,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('quotation_document');
+        Schema::dropIfExists('quotation_documents');
+        Schema::dropIfExists('closed_quotation_bidders');
         Schema::dropIfExists('quotation_contact');
         Schema::dropIfExists('quotation_items');
         Schema::dropIfExists('quotation_category');

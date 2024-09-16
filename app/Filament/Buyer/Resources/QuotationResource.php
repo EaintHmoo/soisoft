@@ -15,6 +15,7 @@ use Filament\Support\Colors\Color;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Tabs;
+use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -27,12 +28,15 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Support\Enums\VerticalAlignment;
@@ -158,12 +162,12 @@ class QuotationResource extends Resource
 
                                         Select::make('bidders')
                                             ->label('Select bidders')
-                                            ->options([
-                                                'microsoft' => 'Microsoft',
-                                                'spacex' => 'SpaceX',
-                                                'amazon' => 'Amazon',
-                                                'google' => 'Google',
-                                            ])
+                                            ->relationship(
+                                                name: 'bidders', 
+                                                titleAttribute: 'name',
+                                                modifyQueryUsing: fn (Builder $query) => $query->role('supplier'),
+                                            )
+                                            ->preload()
                                             ->multiple()
                                             ->required()
                                             ->columnSpanFull()
@@ -496,96 +500,53 @@ class QuotationResource extends Resource
                         Tabs\Tab::make('Documents')
                             ->icon('heroicon-m-paper-clip')
                             ->schema([
-                                TableRepeater::make('quotationDocuments')
+                                Repeater::make('documents')
                                     ->relationship()
-                                    ->headers([
-                                        Header::make('Document Name'),
-                                    ])
+                                    ->hiddenLabel()
                                     ->schema([
-                                        Select::make('document_id')
-                                            ->relationship('document')
-                                            ->getOptionLabelFromRecordUsing(function (Model $record) {
-                                                $label = "<p> {$record->name} </p>";
-                                                if($record->document_type) $label .= "<p class='indent-3 text-xs text-slate-500'>Type - {$record->document_type}</p>";
+                                        TextInput::make('name')
+                                            ->label('Name of file')
+                                            ->live(onBlur: true)
+                                            ->placeholder('Placeholder')
+                                            ->required(),
 
-                                                
-                                                if($record->required_resubmit) {
-                                                    $label .= "<p class='indent-3 text-xs text-slate-500'>Re-submit - Yes </p>";
-                                                } else {
-                                                    $label .= "<p class='indent-3 text-xs text-slate-500'>Re-submit - No </p>";
-                                                }
-
-                                                if($record->Comparable) {
-                                                    $label .= "<p class='indent-3 text-xs text-slate-500'>Comparable - Yes </p>";
-                                                } else {
-                                                    $label .= "<p class='indent-3 text-xs text-slate-500'>Comparable - No </p>";
-                                                }
-
-                                                return $label;
-                                            })
-                                            ->allowHtml()
-                                            ->searchable()
-                                            ->preload()
+                                        Select::make('document_type')
+                                            ->label('Document Types')
                                             ->required()
-                                            ->createOptionForm([
-                                                Toggle::make('required_resubmit')
-                                                    ->label('Required to response')
-                                                    ->helperText('To be able to comparable, File must be excel file with redefined columns for both Questions and Answers.')
-                                                    ->columnSpanFull(),
-
-                                                Section::make([
-                                                    TextInput::make('name')
-                                                        ->label('Name of file')
-                                                        ->placeholder('Placeholder')
-                                                        ->required(),
-
-                                                    Select::make('document_type')
-                                                        ->label('Tender Document Types')
-                                                        ->required()
-                                                        ->options(
-                                                            PrePopulatedData::where('type', 'document_type')
-                                                                ->get()
-                                                                ->pluck('data.label', 'data.label')
-                                                                ->toArray()
-                                                        )
-                                                        ->searchable()
-                                                ])
-                                                ->columns(2),
-                                                
-                                                FileUpload::make('document_path')
-                                                    ->label('Tender Document')
-                                                    ->required()
-                                                    ->acceptedFileTypes([
-                                                        'application/pdf',
-                                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                                                        'text/plain'
-                                                    ])
-                                                    ->helperText('Support Types: docx, xlsx, pdf, pptx, txt.')
-                                                    ->directory('tender-documents')
-                                                    ->columnSpanFull(),
-                                                    
-                                                Section::make('Document Config')
-                                                    ->schema([
-                                                        Toggle::make('comparable')
-                                                            ->label('This Document is Comparable')
-                                                            ->helperText('To be able to comparable, File must be excel file (.xlsx, .xls) with defined columns for both Questions and Answers.')
-                                                            ->columnSpanFull(),
-
-                                                        TextInput::make('question_columns')
-                                                            ->label('Question Col Range')
-                                                            ->placeholder('C8:C24'),
-                                                        
-                                                        TextInput::make('answer_columns')
-                                                            ->label('Answer Col Range')
-                                                            ->placeholder('D8:D24'),
-                                                    ])->columns(2)
+                                            ->options(
+                                                PrePopulatedData::where('type', 'document_type')
+                                                    ->get()
+                                                    ->pluck('data.label', 'data.label')
+                                                    ->toArray()
+                                            )
+                                            ->searchable(),
+                                        
+                                        FileUpload::make('document_path')
+                                            ->label('Attach file')
+                                            ->required()
+                                            ->acceptedFileTypes([
+                                                'application/pdf',
+                                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                                'text/plain'
                                             ])
-                                            ->createOptionModalHeading('Create new document'),
+                                            ->helperText('Support Types: docx, xlsx, pdf, pptx, txt.')
+                                            ->directory('tender-documents')
+                                            ->columnSpanFull(),
+
+                                        Textarea::make('description')
+                                            ->label('Description')
+                                            ->placeholder('Placeholder')
+                                            ->columnSpan(2),
                                     ])
-                                    ->columnSpan('full')
-                                    ->addActionLabel('Add document')
+                                    ->columns(2)
+                                    ->grid(2)
+                                    ->reorderable(false)
+                                    ->collapsed()
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add new document')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
                             ]),
 
                         Tabs\Tab::make('Checklist & State')
@@ -631,7 +592,8 @@ class QuotationResource extends Resource
                 Split::make([
                     TextColumn::make('reference_no')
                         ->formatStateUsing(fn (string $state): HtmlString => new HtmlString('<span class=" text-gray-400"> Quotation : '.$state.'</span>'))
-                        ->verticalAlignment(VerticalAlignment::Start),
+                        ->verticalAlignment(VerticalAlignment::Start)
+                        ->searchable(),
                     
                     TextColumn::make('quotation_state')
                         ->badge()
@@ -643,6 +605,7 @@ class QuotationResource extends Resource
                     TextColumn::make('quotation_title')
                         ->formatStateUsing(fn (string $state): HtmlString => new HtmlString('<span class="text-lg"> '.$state.'</span>'))
                         ->verticalAlignment(VerticalAlignment::Start)
+                        ->searchable()
                 ]),
 
                 Split::make([
@@ -655,7 +618,8 @@ class QuotationResource extends Resource
                         TextColumn::make('categories.name')
                             ->separator(',')
                             ->formatStateUsing(fn (string $state): HtmlString => new HtmlString('<span class="text-gray-400 text-xs"> Categories : </span> <span>'.$state.'</span>'))
-                            ->verticalAlignment(VerticalAlignment::Start),
+                            ->verticalAlignment(VerticalAlignment::Start)
+                            ->searchable(),
                     ]),
 
                     Stack::make([
@@ -672,8 +636,95 @@ class QuotationResource extends Resource
                 ]),
             ])
             ->filters([
-                //
+                SelectFilter::make('categories')
+                    ->label('Categories')
+                    ->relationship('categories', 'name')
+                    ->multiple()
+                    ->searchable(),
+
+                SelectFilter::make('department_id')
+                    ->label('Department')
+                    ->relationship('department', 'name')
+                    ->preload()
+                    ->searchable(),
+                
+                SelectFilter::make('project_id')
+                    ->label('Project')
+                    ->relationship('project', 'name')
+                    ->preload()
+                    ->searchable(),
+
+                SelectFilter::make('evaluation_type')
+                    ->options(
+                        PrePopulatedData::where('type', 'evaluation_type')
+                                    ->get()
+                                    ->pluck('data.label', 'data.label')
+                                    ->toArray()
+                    )
+                    ->searchable(),
+                
+                SelectFilter::make('mode_of_submission')
+                    ->options(
+                        PrePopulatedData::where('type', 'submission_mode')
+                                    ->get()
+                                    ->pluck('data.label', 'data.label')
+                                    ->toArray()
+                    )
+                    ->searchable(),
+                
+                TernaryFilter::make('Sourcing')
+                    ->placeholder('All')
+                    ->trueLabel('Open sourcing')
+                    ->falseLabel('Close sourcing')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('is_open_sourcing', true),
+                        false: fn (Builder $query) => $query->where('is_open_sourcing', false),
+                        blank: fn (Builder $query) => $query,
+                    ),
+
+                Filter::make('start_datetime')
+                    ->label('Start date between')
+                    ->form([
+                        DatePicker::make('start_from'),
+                        DatePicker::make('start_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['start_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('start_datetime', '>=', $date),
+                            )
+                            ->when(
+                                $data['start_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('start_datetime', '<=', $date),
+                            );
+                    }),
+
+                Filter::make('end_datetime')
+                    ->label('End date between')
+                    ->form([
+                        DatePicker::make('end_from'),
+                        DatePicker::make('end_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['end_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('end_datetime', '>=', $date),
+                            )
+                            ->when(
+                                $data['end_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('end_datetime', '<=', $date),
+                            );
+                    }),
+
+                Filter::make('nda_required')
+                    ->label('NDA required')
+                    ->toggle()
+                    ->modifyFormFieldUsing(fn (Toggle $field) => $field->inline(false)),
             ])
+            ->filtersFormWidth('4xl')
+            ->filtersFormColumns(3)
             ->actions([
                 // Tables\Actions\EditAction::make(),
             ])

@@ -10,20 +10,16 @@ class QuotationDocument extends Model
 {
     use HasFactory;
 
-    protected $table = 'quotation_document';
-
     protected $fillable = [
         'quotation_id',
-        'document_id'
+        'name',
+        'document_type',
+        'document_path',
+        'description',
     ];
 
-    public function quotation(): BelongsTo
+    public function quotation(): BelongsTo 
     {
-        return $this->belongsTo(Quotation::class);
-    }
- 
-    public function document(): BelongsTo
-    {
-        return $this->belongsTo(Document::class);
+        return $this->belongsTo(Quotation::class, 'quotation_id');
     }
 }

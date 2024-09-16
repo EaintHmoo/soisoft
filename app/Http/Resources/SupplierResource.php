@@ -20,7 +20,7 @@ class SupplierResource extends JsonResource
             'supplier_id'   => $this->supplier_id,
             'supplier'   => $this->supplier?->name,
             'supplier_type' => $this->supplier_type,
-            'business_type' => $this->business_type_name?->name,
+            'business_type' => $this->business_type,
             'registration_number'   => $this->registration_number,
             'vat_number'    => $this->vat_number,
             'company_name'  => $this->company_name,
@@ -35,7 +35,7 @@ class SupplierResource extends JsonResource
             'primary_contact_city'  => $this->primary_contact_city,
             'primary_contact_postal_code'   => $this->primary_contact_postal_code,
             'primary_contact_country'   => $this->primary_contact_country,
-            'supplier_industry' => $this->supplier_industry,
+            'supplier_industries' => $this->supplier_industries,
 
             'company_contact_full_name' => $this->company_contact_full_name,
             'company_contact_designation'   => $this->company_contact_designation,

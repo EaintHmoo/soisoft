@@ -80,7 +80,7 @@ return new class extends Migration
         });
         
         //Many to many relationship between tender and user with supplier role
-        Schema::create('bidder_details', function (Blueprint $table) {
+        Schema::create('closed_tender_bidders', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tender_id');
             $table->unsignedBigInteger('supplier_id');
@@ -91,13 +91,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('tender_id');
             $table->unsignedBigInteger('contact_id');
-            $table->timestamps();
-        });
-        
-        Schema::create('tender_document', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('tender_id');
-            $table->unsignedBigInteger('document_id');
             $table->timestamps();
         });
 
@@ -117,6 +110,22 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+
+        Schema::create('tender_documents', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tender_id')
+                ->references('id')
+                ->on('tenders')
+                ->onDelete('cascade');
+            $table->string('name');
+            $table->string('document_type', 50); //Specification, T & C , etc (get from config)
+            $table->string('document_path', 255);
+            $table->boolean('required_resubmit')->default(false); //required to response
+            $table->text('question_columns')->nullable();
+            $table->text('answer_columns')->nullable();
+            $table->boolean('comparable')->default(false); //required to response
+            $table->timestamps();
+        });
     }
 
     /**
@@ -124,10 +133,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('tender_documents');
         Schema::dropIfExists('tender_items');
-        Schema::dropIfExists('tender_document');
         Schema::dropIfExists('tender_contact');
-        Schema::dropIfExists('bidder_details');
+        Schema::dropIfExists('closed_tender_bidders');
         Schema::dropIfExists('tenders');
     }
 };

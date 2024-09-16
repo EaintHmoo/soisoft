@@ -5,6 +5,7 @@ use App\Http\Controllers\SupplierCategoryApiController;
 use App\Http\Controllers\SupplierPreRequiredDataApiController;
 use App\Http\Controllers\TenderApiController;
 use App\Http\Controllers\UserAuthApiController;
+use App\Mail\SupplierRegisterMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,13 +14,13 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
-Route::post('register', [UserAuthApiController::class, 'register']);
+// Route::post('register', [UserAuthApiController::class, 'register']);
+Route::post('suppliers/individual', [SupplierApiController::class, 'createIndividualRegister']);
+Route::post('suppliers/corporate', [SupplierApiController::class, 'createCorporateRegister']);
 Route::post('login', [UserAuthApiController::class, 'login']);
 
 Route::group(['as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
     Route::post('logout', [UserAuthApiController::class, 'logout']);
-    Route::post('suppliers/individual', [SupplierApiController::class, 'createIndividualRegister']);
-    Route::post('suppliers/corporate', [SupplierApiController::class, 'createCorporateRegister']);
 
     Route::get('tenders', [TenderApiController::class, 'getTenders']);
     Route::get('tenders/{id}', [TenderApiController::class, 'getTenderDetail']);

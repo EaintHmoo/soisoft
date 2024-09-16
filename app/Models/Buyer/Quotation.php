@@ -2,6 +2,7 @@
 
 namespace App\Models\Buyer;
 
+use App\Models\User;
 use App\Models\Admin\Category;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,7 +54,7 @@ class Quotation extends Model
         return $this->hasMany(QuotationContact::class, 'quotation_id');
     }
 
-    public function quotationDocuments(): HasMany
+    public function documents(): HasMany
     {
         return $this->hasMany(QuotationDocument::class, 'quotation_id');
     }
@@ -61,11 +62,6 @@ class Quotation extends Model
     public function contacts(): BelongsToMany
     {
         return $this->belongsToMany(Contact::class, 'quotation_contact');
-    }
-
-    public function documents(): BelongsToMany
-    {
-        return $this->belongsToMany(Document::class, 'quotation_document');
     }
 
     public function department(): BelongsTo 
@@ -88,11 +84,15 @@ class Quotation extends Model
         return $this->belongsToMany(Category::class, 'quotation_category', 'quotation_id', 'category_id');
     }
 
+    public function bidders(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'closed_quotation_bidders', 'quotation_id', 'supplier_id');
+    }
+
     protected static function booted(): void
     {
         static::deleting(function (Tender $record) {
             $record->contacts()->detach();
-            $record->documents()->detach();
         });
     }
 }

@@ -11,6 +11,8 @@ return [
         'payment_mode' => 'Payment Mode',
         'currency' => 'Currency',
         'submission_mode' => 'Submission Mode',
-        'expected_delivery_date' => 'Expected Delivery Date'
+        'expected_delivery_date' => 'Expected Delivery Date',
+        'business_type' => 'Business Type',
+        'supplier_industry' => 'Aupplier Industry',
     ]
 ];
