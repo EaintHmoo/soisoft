@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TenderListResource;
 use App\Http\Resources\TenderQuestionResource;
 use App\Http\Resources\TenderResource;
 use App\Models\Buyer\Tender;
@@ -35,7 +36,7 @@ class TenderApiController extends Controller
             ->paginate(10);
         return response()
             ->json([
-                'data' => TenderResource::collection($data)->response()->getData(true),
+                ...TenderListResource::collection($data)->response()->getData(true),
                 'status' => Response::HTTP_OK
             ], Response::HTTP_OK);
     }
@@ -72,7 +73,7 @@ class TenderApiController extends Controller
             ->paginate(10);
         return response()
             ->json([
-                'data' => TenderQuestionResource::collection($data)->response()->getData(true),
+                ...TenderQuestionResource::collection($data)->response()->getData(true),
                 'status' => Response::HTTP_OK
             ], Response::HTTP_OK);
     }
