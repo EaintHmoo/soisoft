@@ -21,4 +21,9 @@ return [
         'contract_terms_and_conditions' => 'All contract terms & conditions and contract compliance statements',
         'rfp_terms_and_conditions' => 'All RFP terms & conditions and connected party dicisions',
     ],
+    'tender_proposal_status' => [
+        'pending' => 'pending',
+        'proposed' => 'proposed',
+        'cancelled' => 'cancelled',
+    ]
 ];

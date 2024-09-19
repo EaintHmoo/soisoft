@@ -52,6 +52,11 @@ class TenderResource extends JsonResource
             'tender_fees_information'   => $this->tender_fees_information,
             'fees_documents'    => $this->fees_documents,
             'awarding_agency'   => $this->awarding_agency,
+            'tender_state'  => $this->tender_state,
+            'tender_status'  => $this->tender_status,
+            'created_at' => $this->created_at,
+            'tender_proposal_id' => $this->tenderProposal ? $this->tenderProposal?->id : null,
+            'tender_proposal_status' => $this->tenderProposal ? $this->tenderProposal?->status : config('soisoft.tender_proposal_status.pending'),
             'publication_check_list'    => array_filter(
                 config('soisoft.publication_check_list'),
                 function ($key) use ($publication_check_list) {
@@ -59,14 +64,10 @@ class TenderResource extends JsonResource
                 },
                 ARRAY_FILTER_USE_KEY
             ),
-            'tender_state'  => $this->tender_state,
-            'tender_status'  => $this->tender_status,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
             'tender_items' => TenderDetailResource::collection($this->tenderItems),
-            'tender_contacts' => $this->contacts,
+            'tender_contacts' => TenderContactResource::collection($this->contacts),
             'documents' => DocumentResource::collection($this->documents),
-            'suppliers' => $this->bidders->map(function ($value) {
+            'suppliers' => $this->suppliers->map(function ($value) {
                 return $value?->name;
             }),
         ];

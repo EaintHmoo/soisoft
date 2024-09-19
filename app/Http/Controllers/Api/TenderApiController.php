@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\TenderListResource;
 use App\Http\Resources\TenderQuestionResource;
 use App\Http\Resources\TenderResource;
@@ -52,6 +53,7 @@ class TenderApiController extends Controller
             'project',
             'tenderContacts'
         ])->find($id);
+        $data['tenderProposal'] = $data->tenderProposals()->where('bidder_id', auth()->user()->id)->first();
         return response()
             ->json([
                 'data' => new TenderResource($data),

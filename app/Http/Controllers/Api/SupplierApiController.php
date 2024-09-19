@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\SupplierResource;
 use App\Mail\SupplierRegisterMail;
 use Illuminate\Support\Str;
