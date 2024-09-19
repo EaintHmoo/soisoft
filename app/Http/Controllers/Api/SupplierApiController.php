@@ -95,7 +95,7 @@ class SupplierApiController extends Controller
         ]);
         try {
             DB::beginTransaction();
-            $user = self::registerUser($request->primary_contact_full_name, $request->primary_contact_email);
+            $user = self::registerUser($request->company_contact_full_name, $request->company_contact_email);
             $data = SupplierInfo::create([
                 'supplier_id' => $user->id,
                 'business_type' => $request->business_type,
