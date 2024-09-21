@@ -14,7 +14,8 @@ class TenderPropsalApiController extends Controller
     public function createTenderProposal(Request $request, $tender_id)
     {
         $request->validate([
-            'tender_fee_receipt' => 'required|mimes:docx,xlsx,pdf,ppt,txt',
+            // 'tender_fee_receipt' => 'required|mimes:docx,xlsx,pdf,ppt,txt',
+            'tender_fee_receipt' => 'required',
             'checklist_before_submit' => 'required',
         ]);
         try {

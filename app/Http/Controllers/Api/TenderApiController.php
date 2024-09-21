@@ -114,7 +114,8 @@ class TenderApiController extends Controller
     public function addTenderDocument(Request $request, $tender_id)
     {
         $request->validate([
-            'document' => 'required|mimes:docx,xlsx,pdf,ppt,txt',
+            // 'document' => 'required|mimes:docx,xlsx,pdf,ppt,txt',
+            'document' => 'required',
             'document_type' => 'required',
         ]);
         try {
