@@ -15,6 +15,7 @@ Route::get('/user', function (Request $request) {
 
 
 // Route::post('register', [UserAuthApiController::class, 'register']);
+Route::get('document-types', [SupplierPreRequiredDataApiController::class, 'getDocumentTypeList']);
 Route::get('supplier-business-types', [SupplierPreRequiredDataApiController::class, 'getSupplierBusinessTypeList']);
 Route::get('supplier-countries', [SupplierPreRequiredDataApiController::class, 'getCountryList']);
 Route::get('supplier-industries', [SupplierPreRequiredDataApiController::class, 'getSupplierIndustryList']);
@@ -33,4 +34,5 @@ Route::group(['as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
     Route::post('tender-questions/{tender_id}', [TenderApiController::class, 'createTenderQuestion']);
     Route::post('tender-proposals/{tender_id}', [TenderPropsalApiController::class, 'createTenderProposal']);
     Route::put('tender-proposals/{id}/cancel', [TenderPropsalApiController::class, 'cancelTenderProposal']);
+    Route::post('tenders/{tender_id}/documents', [TenderApiController::class, 'addTenderDocument']);
 });

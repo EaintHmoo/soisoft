@@ -55,4 +55,21 @@ class SupplierPreRequiredDataApiController extends Controller
                 'status' => Response::HTTP_OK
             ], Response::HTTP_OK);
     }
+
+    public function getDocumentTypeList()
+    {
+        $data = PrePopulatedData::where('type', 'document_type')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item['id'] ?? '',
+                    'name' => $item['data']['label'] ?? '',
+                ];
+            });
+        return response()
+            ->json([
+                'data' => $data,
+                'status' => Response::HTTP_OK
+            ], Response::HTTP_OK);
+    }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\FileUpload;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TenderListResource;
 use App\Http\Resources\TenderQuestionResource;
 use App\Http\Resources\TenderResource;
 use App\Models\Buyer\Tender;
+use App\Models\Buyer\TenderDocument;
 use App\Models\TenderQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -104,6 +106,47 @@ class TenderApiController extends Controller
             return response()
                 ->json([
                     'message' => 'Fail to create',
+                    'status' => 500
+                ], 500);
+        }
+    }
+
+    public function addTenderDocument(Request $request, $tender_id)
+    {
+        $request->validate([
+            'document' => 'required|mimes:docx,xlsx,pdf,ppt,txt',
+            'document_type' => 'required',
+        ]);
+        try {
+            DB::beginTransaction();
+            if ($request->hasFile('document')) {
+                $filepath = FileUpload::upload('tender-documents', ($request->document));
+                $originalFileName = $request->file('document')->getClientOriginalName();
+                $pathInfo = pathinfo($originalFileName);
+                $name = $pathInfo['filename'];
+            } else {
+                $filepath = null;
+                $name = '';
+            }
+            TenderDocument::create([
+                'tender_id' => $tender_id,
+                'name' => $name,
+                'document_type' => $request->document_type,
+                'document_path' => $filepath,
+                'comment' => $request->comment,
+                'document_by_id' => auth()->user()->id,
+            ]);
+            DB::commit();
+            return response()
+                ->json([
+                    'message' => 'Tender document added successfully.',
+                    'status' => Response::HTTP_CREATED
+                ], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()
+                ->json([
+                    'message' => 'Fail to add tender document.',
                     'status' => 500
                 ], 500);
         }
