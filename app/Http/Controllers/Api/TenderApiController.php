@@ -74,7 +74,7 @@ class TenderApiController extends Controller
                 $query->where('question', 'like', '%' . $request->keyword . '%')
                     ->orWhere('answer', 'like', '%' . $request->keyword . '%');
             })
-            ->paginate(10);
+            ->get();
         return response()
             ->json([
                 ...TenderQuestionResource::collection($data)->response()->getData(true),
