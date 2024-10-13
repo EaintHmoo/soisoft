@@ -10,6 +10,7 @@ use App\Http\Resources\TenderResource;
 use App\Models\Buyer\Tender;
 use App\Models\Buyer\TenderDocument;
 use App\Models\TenderQuestion;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,6 +35,24 @@ class TenderApiController extends Controller
                     ->orWhereRelation('department', 'name', 'like', '%' . $request->keyword . '%')
                     ->orWhereRelation('category', 'name', 'like', '%' . $request->keyword . '%')
                     ->orWhereRelation('subCategory', 'name', 'like', '%' . $request->keyword . '%');
+            })
+            ->when($request->status ?? '',function ($query) use($request){
+                $query->where('tender_status',$request->status);
+            })
+            ->when($request->date === 'today', function ($query){
+                $query->whereDate('created_at',Carbon::today());
+            })
+            ->when($request->date === 'this_week', function ($query){
+                $query->whereBetween('created_at', [
+                    Carbon::parse('monday this week')->startOfDay(), 
+                    Carbon::now()->endOfDay()
+                ]);
+            })
+            ->when($request->date === 'this_month', function ($query){
+                $query->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfDay()]);
+            })
+            ->when($request->date === 'last_seven_days', function ($query){
+                $query->whereBetween('created_at', [Carbon::now()->subDays(7), Carbon::now()->endOfDay()]);
             })
             ->orderBy('start_datetime', 'desc')
             ->paginate(10);
