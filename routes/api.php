@@ -30,6 +30,7 @@ Route::group(['as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
 
     Route::get('tenders', [TenderApiController::class, 'getTenders']);
     Route::get('tenders/{id}', [TenderApiController::class, 'getTenderDetail']);
+    Route::post('tenders/{id}/accept-nda', [TenderApiController::class, 'acceptNDAToParticipate']);
     Route::get('tender-questions/{tender_id}', [TenderApiController::class, 'getTenderQuestions']);
     Route::post('tender-questions/{tender_id}', [TenderApiController::class, 'createTenderQuestion']);
     Route::post('tender-proposals/{tender_id}', [TenderPropsalApiController::class, 'createTenderProposal']);

@@ -6,6 +6,6 @@ export default {
         './app/Filament/Buyer/**/*.php',
         './resources/views/filament/buyer/**/*.blade.php',
         './vendor/filament/**/*.blade.php',
-        './vendor/awcodes/filament-table-repeater/resources/**/*.blade.php',
+        './vendor/awcodes/filament-table-repeater/resources/**/*.blade.php'
     ],
 }

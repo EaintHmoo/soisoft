@@ -3,10 +3,10 @@
 namespace App\Policies\Admin;
 
 use App\Models\User;
-use App\Models\Admin\TenderCategory;
+use App\Models\Admin\Category;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class TenderCategoryPolicy
+class CategoryPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class TenderCategoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_tender::category');
+        return $user->can('view_any_category');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, TenderCategory $tenderCategory): bool
+    public function view(User $user, Category $category): bool
     {
-        return $user->can('view_tender::category');
+        return $user->can('view_category');
     }
 
     /**
@@ -31,23 +31,23 @@ class TenderCategoryPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_tender::category');
+        return $user->can('create_category');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, TenderCategory $tenderCategory): bool
+    public function update(User $user, Category $category): bool
     {
-        return $user->can('update_tender::category');
+        return $user->can('update_category');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, TenderCategory $tenderCategory): bool
+    public function delete(User $user, Category $category): bool
     {
-        return $user->can('delete_tender::category');
+        return $user->can('delete_category');
     }
 
     /**
@@ -55,15 +55,15 @@ class TenderCategoryPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_tender::category');
+        return $user->can('delete_any_category');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, TenderCategory $tenderCategory): bool
+    public function forceDelete(User $user, Category $category): bool
     {
-        return $user->can('force_delete_tender::category');
+        return $user->can('force_delete_category');
     }
 
     /**
@@ -71,15 +71,15 @@ class TenderCategoryPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_tender::category');
+        return $user->can('force_delete_any_category');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, TenderCategory $tenderCategory): bool
+    public function restore(User $user, Category $category): bool
     {
-        return $user->can('restore_tender::category');
+        return $user->can('restore_category');
     }
 
     /**
@@ -87,15 +87,15 @@ class TenderCategoryPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_tender::category');
+        return $user->can('restore_any_category');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, TenderCategory $tenderCategory): bool
+    public function replicate(User $user, Category $category): bool
     {
-        return $user->can('replicate_tender::category');
+        return $user->can('replicate_category');
     }
 
     /**
@@ -103,6 +103,6 @@ class TenderCategoryPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_tender::category');
+        return $user->can('reorder_category');
     }
 }

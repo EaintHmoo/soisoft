@@ -3,3 +3,30 @@
 @config 'tailwind.config.js';
 
 @import '<path-to-vendor>/awcodes/filament-table-repeater/resources/css/plugin.css';
+
+.fi-page-sub-navigation-sidebar {
+    @apply w-32
+}
+
+/* @layer components { */
+    /* .fi-sidebar {
+        @apply bg-gray-900 !important;
+    } */
+
+    /* .fi-sidebar-item-icon {
+        @apply !text-lime-600 dark:!text-violet-600;
+    }
+
+    .fi-main {
+        @apply !bg-slate-100 dark:!bg-gray-800;
+    }
+
+    .fi-layout {
+        @apply !bg-slate-100 dark:!bg-gray-800;
+    }
+
+    .fi-input-wrp {
+        @apply focus-within:!ring-indigo-500 dark:focus-within:!ring-indigo-500 focus-within:!ring-1 dark:focus-within:!ring-1;
+    } */
+    
+/* } */

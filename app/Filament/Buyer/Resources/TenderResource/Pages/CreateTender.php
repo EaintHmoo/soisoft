@@ -2,10 +2,12 @@
 
 namespace App\Filament\Buyer\Resources\TenderResource\Pages;
 
+use App\Models\User;
 use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Support\Colors\Color;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Mail;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Buyer\Resources\TenderResource;
 
@@ -53,5 +55,19 @@ class CreateTender extends CreateRecord
     protected function getFormActions(): array
     {
         return [];
+    }
+
+    protected function afterCreate(): void
+    {
+        $details = [
+            'type' => 'Tender',
+            'title' => $this->record->tender_title,
+            'start_date' => $this->record->start_datetime,
+            'end_date' => $this->record->end_datetime,
+        ];
+
+        $contacts = User::role('supplier')->pluck('email')->toArray();
+       
+        Mail::to($contacts)->send(new \App\Mail\NewTender($details));
     }
 }

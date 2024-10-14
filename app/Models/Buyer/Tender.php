@@ -19,32 +19,32 @@ class Tender extends Model
 
     protected $fillable = [
         // 'buyer_id',
-        'tender_no',
-        'department_id',
-        'project_id',
+        'tender_no', //
+        'department_id', //
+        'project_id', //
         // 'tender_type',
-        'type_of_sourcing',
-        'evaluation_type',
-        'tender_title',
-        'category_id',
-        'sub_category_id',
-        'start_datetime',
-        'end_datetime',
-        'currency',
-        'mode_of_submission',
-        'nda_required',
-        'nda_document',
+        'type_of_sourcing', //
+        'evaluation_type', //
+        'tender_title', //
+        'category_id', //
+        'sub_category_id', //
+        'start_datetime', //
+        'end_datetime', //
+        'currency', //
+        'mode_of_submission',//
+        'nda_required', //
+        'nda_document', //
         'internal_details',
         'external_details',
-        'briefing_information_required',
-        'briefing_date',
-        'briefing_venue',
-        'briefing_details',
-        'briefing_documents',
+        'briefing_information_required', //
+        'briefing_date', //
+        'briefing_venue', //
+        'briefing_details', //
+        'briefing_documents', //
         'fees_required',
-        'tender_fees',
-        'tender_fees_information',
-        'fees_documents',
+        'tender_fees', //
+        'tender_fees_information', //
+        'fees_documents', //
         'awarding_agency',
         'publication_check_list',
         'tender_state',

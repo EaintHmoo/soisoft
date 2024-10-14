@@ -9,6 +9,7 @@ use App\Http\Resources\TenderQuestionResource;
 use App\Http\Resources\TenderResource;
 use App\Models\Buyer\Tender;
 use App\Models\Buyer\TenderDocument;
+use App\Models\TenderNdaAccept;
 use App\Models\TenderQuestion;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -75,6 +76,8 @@ class TenderApiController extends Controller
             'tenderContacts'
         ])->find($id);
         $data['tenderProposal'] = $data->tenderProposals()->where('bidder_id', auth()->user()->id)->first();
+        $data['tenderNdaAccept'] = TenderNdaAccept::where('bidder_id', auth()->user()->id)
+                                                    ->where('tender_id',$id)->first();
         return response()
             ->json([
                 'data' => new TenderResource($data),
@@ -167,6 +170,31 @@ class TenderApiController extends Controller
             return response()
                 ->json([
                     'message' => 'Fail to add tender document.',
+                    'status' => 500
+                ], 500);
+        }
+    }
+
+    public function acceptNDAToParticipate($id)
+    {
+        try {
+            DB::beginTransaction();
+            TenderNdaAccept::create([
+                'tender_id' => $id,
+                'bidder_id' => auth()->user()->id,
+                'is_accept' => true,
+            ]);
+            DB::commit();
+            return response()
+                ->json([
+                    'message' => 'Accepted NDA and participated successfully.',
+                    'status' => Response::HTTP_OK
+                ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()
+                ->json([
+                    'message' => 'Fail to accepted NDA.',
                     'status' => 500
                 ], 500);
         }

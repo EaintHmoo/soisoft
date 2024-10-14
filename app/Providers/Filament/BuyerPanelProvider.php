@@ -41,7 +41,7 @@ class BuyerPanelProvider extends PanelProvider
                 // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
             ])
-            ->sidebarCollapsibleOnDesktop()
+            ->sidebarCollapsibleOnDesktop(true)
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

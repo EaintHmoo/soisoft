@@ -4,6 +4,7 @@ namespace App\Models\Buyer;
 
 use App\Models\User;
 use App\Models\Admin\Category;
+use App\Models\TenderProposal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -87,6 +88,11 @@ class Quotation extends Model
     public function bidders(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'closed_quotation_bidders', 'quotation_id', 'supplier_id');
+    }
+
+    public function quotationProposals(): HasMany
+    {
+        return $this->hasMany(TenderProposal::class, 'tender_id', 'id');
     }
 
     protected static function booted(): void

@@ -70,6 +70,7 @@ class TenderResource extends JsonResource
             'suppliers' => $this->suppliers->map(function ($value) {
                 return $value?->name;
             }),
+            'is_nda_accepted' => $this->tenderNdaAccept?->is_accept ?? 0,
         ];
     }
 }

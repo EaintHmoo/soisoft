@@ -2,62 +2,55 @@
 
 namespace App\Filament\Buyer\Widgets;
 
+use App\Models\Admin\Category;
+use App\Models\Buyer\Quotation;
+use App\Models\Buyer\Tender;
+use Flowframe\Trend\Trend;
 use Filament\Widgets\ChartWidget;
 
 class TandQByCategory extends ChartWidget
 {
     protected static ?string $heading = 'Tender and Quotation by Category';
 
+    protected static bool $isLazy = false;
+
+    protected int | string | array $columnSpan = 'full';
+
     protected function getData(): array
     {
+        $categories = Category::where('parent_id', -1)->get();
+        
+        $tender_count = $categories->map(function ($category) {
+            return Tender::where('category_id', $category->id)->count();
+        });
+        
+        $quotation_count = $categories->map(function ($category) {
+            $child_cats = $category->children()->pluck('id')->toArray();
+            return Quotation::whereHas('categories', function($query) use ($child_cats) {
+                $query->whereIn('id', $child_cats);
+            })->count();
+        });
+        
         return [
             'datasets' => [
                 [
                     'label' => 'Tender',
-                    'data' => [5, 10, 7, 20, 33, 18],
-                    'backgroundColor' => [
-                        '#a5f3fc',
-                        '#fed7aa',
-                        '#ddd6fe',
-                        '#fecaca',
-                        '#bae6fd',
-                        '#f5d0fe'
-                    ],
-                    'hoverOffset' => 4
+                    'data' => $tender_count,
+                    'borderColor' => '#fecaca',
                 ],
 
                 [
                     'label' => 'Quotation',
-                    'data' => [3, 8, 5, 13, 27, 16],
-                    'backgroundColor' => [
-                        '#a5f3fc',
-                        '#fed7aa',
-                        '#ddd6fe',
-                        '#fecaca',
-                        '#bae6fd',
-                        '#f5d0fe'
-                    ],
-                    'hoverOffset' => 4
+                    'data' => $quotation_count,
+                    'borderColor' => '#ddd6fe',
                 ],
             ],
-            'labels' => [
-                'ICT', 
-                'Construction & Civil Engineering', 
-                'Healthcare & Medical Supplies', 
-                'Office Supplies & Services',
-                'Professional Services',
-                'Transportation & Logistics'
-            ],
+            'labels' => $categories->pluck('name')->toArray(),
         ];
-    }
-
-    public function getDescription(): ?string
-    {
-        return 'Outer cycle is for the Tenders and Inner cycle is for the Quotations.';
     }
 
     protected function getType(): string
     {
-        return 'pie';
+        return 'line';
     }
 }
