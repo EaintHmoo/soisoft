@@ -36,4 +36,7 @@ Route::group(['as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
     Route::post('tender-proposals/{tender_id}', [TenderPropsalApiController::class, 'createTenderProposal']);
     Route::put('tender-proposals/{id}/cancel', [TenderPropsalApiController::class, 'cancelTenderProposal']);
     Route::post('tenders/{tender_id}/documents', [TenderApiController::class, 'addTenderDocument']);
+
+    Route::get('tenders-by-supplier', [TenderApiController::class, 'getTenderListBySupplier']);
+    Route::get('tenders-by-supplier/count', [TenderApiController::class, 'getTenderCountBySupplier']);
 });

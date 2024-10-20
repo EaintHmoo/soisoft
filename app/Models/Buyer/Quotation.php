@@ -4,6 +4,7 @@ namespace App\Models\Buyer;
 
 use App\Models\User;
 use App\Models\Admin\Category;
+use App\Models\QuotationProposal;
 use App\Models\TenderProposal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -93,6 +94,11 @@ class Quotation extends Model
     public function quotationProposals(): HasMany
     {
         return $this->hasMany(TenderProposal::class, 'tender_id', 'id');
+    }
+
+    public function quotation_proposals(): HasMany
+    {
+        return $this->hasMany(QuotationProposal::class, 'quotation_id', 'id');
     }
 
     protected static function booted(): void

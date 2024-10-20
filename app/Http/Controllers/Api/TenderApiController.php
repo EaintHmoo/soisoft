@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Helpers\FileUpload;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\QuotationListResource;
+use App\Http\Resources\SupplierQuotationListResource;
+use App\Http\Resources\SupplierTenderListResource;
 use App\Http\Resources\TenderListResource;
 use App\Http\Resources\TenderQuestionResource;
 use App\Http\Resources\TenderResource;
+use App\Http\Services\Api\TenderService;
 use App\Models\Buyer\Tender;
 use App\Models\Buyer\TenderDocument;
 use App\Models\TenderNdaAccept;
@@ -18,48 +22,26 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TenderApiController extends Controller
 {
+    protected $service;
+
+    public function __construct(TenderService $service)
+    {
+        $this->service = $service;
+    }
+
     public function getTenders(Request $request)
     {
-        $data = Tender::with([
-            'tenderItems',
-            'documents',
-            'category',
-            'subCategory',
-            'department',
-            'project',
-            'tenderContacts'
-        ])
-            ->when($request->keyword ?? '', function ($query) use ($request) {
-                $query->where('tender_no', 'like', '%' . $request->keyword . '%')
-                    ->orWhere('tender_title', 'like', '%' . $request->keyword . '%')
-                    ->orWhere('mode_of_submission', 'like', '%' . $request->keyword . '%')
-                    ->orWhereRelation('department', 'name', 'like', '%' . $request->keyword . '%')
-                    ->orWhereRelation('category', 'name', 'like', '%' . $request->keyword . '%')
-                    ->orWhereRelation('subCategory', 'name', 'like', '%' . $request->keyword . '%');
-            })
-            ->when($request->status ?? '',function ($query) use($request){
-                $query->where('tender_status',$request->status);
-            })
-            ->when($request->date === 'today', function ($query){
-                $query->whereDate('created_at',Carbon::today());
-            })
-            ->when($request->date === 'this_week', function ($query){
-                $query->whereBetween('created_at', [
-                    Carbon::parse('monday this week')->startOfDay(), 
-                    Carbon::now()->endOfDay()
-                ]);
-            })
-            ->when($request->date === 'this_month', function ($query){
-                $query->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfDay()]);
-            })
-            ->when($request->date === 'last_seven_days', function ($query){
-                $query->whereBetween('created_at', [Carbon::now()->subDays(7), Carbon::now()->endOfDay()]);
-            })
-            ->orderBy('start_datetime', 'desc')
-            ->paginate(10);
+        if($request->type == 1)
+        {
+            $data = $this->service->getTenderList($request);
+            $data = TenderListResource::collection($data)->response()->getData(true);
+        }else{
+            $data = $this->service->getQuotationList($request);
+            $data = QuotationListResource::collection($data)->response()->getData(true);
+        }
         return response()
             ->json([
-                ...TenderListResource::collection($data)->response()->getData(true),
+                ...$data,
                 'status' => Response::HTTP_OK
             ], Response::HTTP_OK);
     }
@@ -198,5 +180,42 @@ class TenderApiController extends Controller
                     'status' => 500
                 ], 500);
         }
+    }
+
+    public function getTenderListBySupplier(Request $request)
+    {
+        $user_id = auth()->user()->id;
+        if($request->type == 1)
+        {
+            $data = $this->service->getTenderListBySupplier($user_id);
+            $data = SupplierTenderListResource::collection($data)->response()->getData(true);
+        }else{
+            $data = $this->service->getQuotationListBySupplier($user_id);
+            $data = SupplierQuotationListResource::collection($data)->response()->getData(true);
+        }
+
+        return response()
+            ->json([
+                ...$data,
+                'status' => Response::HTTP_OK
+            ], Response::HTTP_OK);
+
+    }
+
+    public function getTenderCountBySupplier(Request $request)
+    {
+        $user_id = auth()->user()->id;
+        if($request->type == 1)
+        {
+            $data = $this->service->getTenderCountBySupplier($user_id);
+        }else{
+            $data = $this->service->getQuotationCountBySupplier($user_id);
+        }
+
+        return response()
+            ->json([
+                'data' => $data,
+                'status' => Response::HTTP_OK
+            ], Response::HTTP_OK);
     }
 }

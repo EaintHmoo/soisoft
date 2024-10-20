@@ -25,5 +25,13 @@ return [
         'pending' => 'pending',
         'proposed' => 'proposed',
         'cancelled' => 'cancelled',
+    ],
+    'tender_status' => [
+        'open' => 'open',
+        'closed' => 'closed',
+        'cancelled' => 'cancelled',
+        'pending' => 'pending award',
+        'awarded' => 'awarded',
+        'noaward' => 'no award',
     ]
 ];
