@@ -16,6 +16,8 @@ class QuotationDocument extends Model
         'document_type',
         'document_path',
         'description',
+        'document_by_id',
+        'comment',
     ];
 
     public function quotation(): BelongsTo 

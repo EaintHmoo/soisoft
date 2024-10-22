@@ -10,6 +10,7 @@ use App\Http\Resources\SupplierTenderListResource;
 use App\Http\Resources\TenderListResource;
 use App\Http\Resources\TenderQuestionResource;
 use App\Http\Resources\TenderResource;
+use App\Http\Services\Api\QuotationService;
 use App\Http\Services\Api\TenderService;
 use App\Models\Buyer\Tender;
 use App\Models\Buyer\TenderDocument;
@@ -23,20 +24,21 @@ use Symfony\Component\HttpFoundation\Response;
 class TenderApiController extends Controller
 {
     protected $service;
+    protected $quoService;
 
-    public function __construct(TenderService $service)
+    public function __construct(TenderService $service, QuotationService $quoService)
     {
         $this->service = $service;
+        $this->quoService = $quoService;
     }
 
     public function getTenders(Request $request)
     {
-        if($request->type == 1)
-        {
+        if ($request->type == 1) {
             $data = $this->service->getTenderList($request);
             $data = TenderListResource::collection($data)->response()->getData(true);
-        }else{
-            $data = $this->service->getQuotationList($request);
+        } else {
+            $data = $this->quoService->getQuotationList($request);
             $data = QuotationListResource::collection($data)->response()->getData(true);
         }
         return response()
@@ -59,7 +61,7 @@ class TenderApiController extends Controller
         ])->find($id);
         $data['tenderProposal'] = $data->tenderProposals()->where('bidder_id', auth()->user()->id)->first();
         $data['tenderNdaAccept'] = TenderNdaAccept::where('bidder_id', auth()->user()->id)
-                                                    ->where('tender_id',$id)->first();
+            ->where('tender_id', $id)->first();
         return response()
             ->json([
                 'data' => new TenderResource($data),
@@ -185,12 +187,11 @@ class TenderApiController extends Controller
     public function getTenderListBySupplier(Request $request)
     {
         $user_id = auth()->user()->id;
-        if($request->type == 1)
-        {
+        if ($request->type == 1) {
             $data = $this->service->getTenderListBySupplier($user_id);
             $data = SupplierTenderListResource::collection($data)->response()->getData(true);
-        }else{
-            $data = $this->service->getQuotationListBySupplier($user_id);
+        } else {
+            $data = $this->quoService->getQuotationListBySupplier($user_id);
             $data = SupplierQuotationListResource::collection($data)->response()->getData(true);
         }
 
@@ -199,17 +200,15 @@ class TenderApiController extends Controller
                 ...$data,
                 'status' => Response::HTTP_OK
             ], Response::HTTP_OK);
-
     }
 
     public function getTenderCountBySupplier(Request $request)
     {
         $user_id = auth()->user()->id;
-        if($request->type == 1)
-        {
+        if ($request->type == 1) {
             $data = $this->service->getTenderCountBySupplier($user_id);
-        }else{
-            $data = $this->service->getQuotationCountBySupplier($user_id);
+        } else {
+            $data = $this->quoService->getQuotationCountBySupplier($user_id);
         }
 
         return response()

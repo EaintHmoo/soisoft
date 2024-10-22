@@ -39,7 +39,8 @@ class Quotation extends Model
         'briefing_details',
         'briefing_documents',
         'publication_check_list',
-        'quotation_state'
+        'quotation_state',
+        'quotation_status',
     ];
 
     protected $casts = [
@@ -66,12 +67,12 @@ class Quotation extends Model
         return $this->belongsToMany(Contact::class, 'quotation_contact');
     }
 
-    public function department(): BelongsTo 
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
 
-    public function project(): BelongsTo 
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
@@ -99,6 +100,11 @@ class Quotation extends Model
     public function quotation_proposals(): HasMany
     {
         return $this->hasMany(QuotationProposal::class, 'quotation_id', 'id');
+    }
+
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'quotation_proposals', 'quotation_id', 'bidder_id');
     }
 
     protected static function booted(): void
