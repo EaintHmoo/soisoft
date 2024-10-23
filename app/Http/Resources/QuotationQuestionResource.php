@@ -16,7 +16,7 @@ class QuotationQuestionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'quotation_id' => $this->quotation_id,
+            'tender_id' => $this->quotation_id,
             'question_by_id' => $this->question_by_id,
             'question_by' => $this->question_by?->name,
             'answer_by_id' => $this->answer_by_id,
@@ -24,6 +24,7 @@ class QuotationQuestionResource extends JsonResource
             'question'  => $this->question,
             'answer'    => $this->answer,
             'asked_on'    => $this->created_at,
+            'opportunity_type' => config('soisoft.opportunity_type.quotation'),
         ];
     }
 }

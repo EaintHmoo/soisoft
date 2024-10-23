@@ -46,6 +46,7 @@ class TenderListResource extends JsonResource
             'awarding_agency'   => $this->awarding_agency,
             'tender_state'  => $this->tender_state,
             'tender_status'  => $this->tender_status,
+            'opportunity_type' => config('soisoft.opportunity_type.tender'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

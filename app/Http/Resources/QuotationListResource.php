@@ -38,6 +38,7 @@ class QuotationListResource extends JsonResource
             'briefing_details'  => $this->briefing_details,
             'tender_state'  => $this->quotation_state,
             'tender_status'  => $this->quotation_status,
+            'opportunity_type' => config('soisoft.opportunity_type.quotation'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

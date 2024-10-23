@@ -25,6 +25,7 @@ class TenderQuestionResource extends JsonResource
             'question'  => $this->question,
             'answer'    => $this->answer,
             'asked_on'    => $this->created_at,
+            'opportunity_type' => config('soisoft.opportunity_type.tender'),
         ];
     }
 }

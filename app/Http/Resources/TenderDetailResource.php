@@ -24,6 +24,7 @@ class TenderDetailResource extends JsonResource
             'specifications' => $this->specifications,
             'description' => $this->description,
             'notes_to_supplier' => $this->notes_to_supplier,
+            'opportunity_type' => config('soisoft.opportunity_type.tender'),
         ];
     }
 }

@@ -71,6 +71,7 @@ class TenderResource extends JsonResource
                 return $value?->name;
             }),
             'is_nda_accepted' => $this->tenderNdaAccept?->is_accept ?? 0,
+            'opportunity_type' => config('soisoft.opportunity_type.tender'),
         ];
     }
 }

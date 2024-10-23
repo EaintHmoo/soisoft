@@ -22,6 +22,7 @@ class SupplierTenderListResource extends JsonResource
             'project_name'    => $this->project?->name,
             'tender_title'  => $this->tender_title,
             'tender_status'  => $this->tender_status,
+            'opportunity_type' => config('soisoft.opportunity_type.tender'),
         ];
     }
 }

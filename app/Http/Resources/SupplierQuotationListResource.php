@@ -22,6 +22,7 @@ class SupplierQuotationListResource extends JsonResource
             'project_name'    => $this->project?->name,
             'tender_title'  => $this->quotation_title,
             'tender_status'  => $this->quotation_status,
+            'opportunity_type' => config('soisoft.opportunity_type.quotation'),
         ];
     }
 }

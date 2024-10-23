@@ -33,5 +33,9 @@ return [
         'pending' => 'pending award',
         'awarded' => 'awarded',
         'noaward' => 'no award',
+    ],
+    'opportunity_type' => [
+        'tender' => 1,
+        'quotation' => 2,
     ]
 ];
