@@ -45,8 +45,9 @@ class TenderService
             ->when($request->date === 'last_seven_days', function ($query) {
                 $query->whereBetween('created_at', [Carbon::now()->subDays(7), Carbon::now()->endOfDay()]);
             })
+            ->where('tender_state', '!=', 'draft')
             ->orderBy('start_datetime', 'desc')
-            ->paginate(10);
+            ->paginate($request->limit ?? 10);
         return $data;
     }
 
