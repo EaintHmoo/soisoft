@@ -51,4 +51,7 @@ Route::group(['as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
 
     Route::get('tenders-by-supplier', [TenderApiController::class, 'getTenderListBySupplier']);
     Route::get('tenders-by-supplier/count', [TenderApiController::class, 'getTenderCountBySupplier']);
+
+    // Suppliers
+    Route::get('suppliers', [SupplierApiController::class, 'getAllSuppliers']);
 });

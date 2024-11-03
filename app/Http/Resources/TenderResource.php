@@ -17,7 +17,7 @@ class TenderResource extends JsonResource
     public function toArray(Request $request): array
     {
         // return parent::toArray($request);
-        $publication_check_list = $this->publication_check_list;
+        $publication_check_list = $this->publication_check_list ?? [];
         return [
             'id' => $this->id,
             'tender_no' => $this->tender_no,

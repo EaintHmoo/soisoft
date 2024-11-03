@@ -17,6 +17,16 @@ use Spatie\Permission\Models\Role;
 
 class SupplierApiController extends Controller
 {
+    public function getAllSuppliers()
+    {
+        $suppliers = SupplierInfo::all();
+        return response()
+            ->json([
+                'data' => SupplierResource::collection($suppliers),
+                'status' => Response::HTTP_OK
+            ], Response::HTTP_OK);
+    }
+
     public function createIndividualRegister(Request $request)
     {
         $request->validate([

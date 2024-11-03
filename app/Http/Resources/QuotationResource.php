@@ -16,7 +16,7 @@ class QuotationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $publication_check_list = $this->publication_check_list;
+        $publication_check_list = $this->publication_check_list ?? [];
         return [
             'id' => $this->id,
             'tender_no' => $this->reference_no,
