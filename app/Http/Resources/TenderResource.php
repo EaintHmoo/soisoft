@@ -65,6 +65,7 @@ class TenderResource extends JsonResource
                 ARRAY_FILTER_USE_KEY
             ),
             'tender_items' => TenderDetailResource::collection($this->tenderItems),
+            'tender_addendums' => TenderAddendumResource::collection($this->addendums),
             'tender_contacts' => TenderContactResource::collection($this->contacts),
             'documents' => DocumentResource::collection($this->documents),
             'suppliers' => $this->suppliers->map(function ($value) {

@@ -14,6 +14,7 @@ return [
         'expected_delivery_date' => 'Expected Delivery Date',
         'business_type' => 'Business Type',
         'supplier_industry' => 'Aupplier Industry',
+        'addendum_type' => 'Addendum Type'
     ],
     'publication_check_list' => [
         'clearly_defined' => 'All requirements are clearly defined',

@@ -3,6 +3,7 @@
 namespace App\Filament\Buyer\Resources\TenderResource\Pages;
 
 use Filament\Forms;
+use App\Models\User;
 use Filament\Tables;
 use Filament\Actions;
 use Filament\Forms\Form;
@@ -10,6 +11,7 @@ use Filament\Tables\Table;
 use App\Models\TenderProposal;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Buyer\Resources\TenderResource;
 use Filament\Resources\Pages\ManageRelatedRecords;
@@ -22,6 +24,14 @@ class Awarding extends ManageRelatedRecords
     protected static string $relationship = 'tenderProposals';
 
     protected static ?string $navigationIcon = '';
+
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        if($parameters['record']['tender_state'] == 'published') {
+            return true;
+        }
+        return false;
+    }
 
     public function table(Table $table): Table
     {
@@ -65,6 +75,19 @@ class Awarding extends ManageRelatedRecords
                     ->action(function (TenderProposal $record) {
                         $record->status = 'awarded';
                         $record->save();
+
+                        $suppliers = User::whereIn('id', $this->record->tenderProposals()->pluck('bidder_id')->toArray())->get()->pluck('email')->toArray();
+                        
+                        //Send congratulation mail to bidder
+                        $details = [
+                            'title' => $this->record->tender_title,
+                            'category' => $this->record->category->name,
+                            'supplier' =>  $record->bidder->name
+                        ];
+                        Mail::to([$record->bidder->email])->send(new \App\Mail\Awarded($details));
+
+                        //Send to all participate suppliers
+                        Mail::to($suppliers)->send(new \App\Mail\AwardedNotification($details));
                     })
                     ->disabled(fn (TenderProposal $record): bool => $record->status == 'awarded'),
             ])

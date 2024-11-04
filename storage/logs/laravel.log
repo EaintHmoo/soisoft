@@ -14523,3 +14523,63 @@ Stack trace:
 #47 D:\\freelanceProj\\soisoft\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('D:\\\\freelancePro...')
 #48 {main}
 "} 
+[2024-11-04 13:43:50] local.ERROR: Uncaught Error: Class "App\Models\Tender" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Uncaught Error: Class \"App\\Models\\Tender\" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown at Command line code:1)
+[stacktrace]
+#0 {main}
+"} 
+[2024-11-04 13:44:02] local.ERROR: Uncaught Error: Class "App\Models\Tender" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Uncaught Error: Class \"App\\Models\\Tender\" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown at Command line code:1)
+[stacktrace]
+#0 {main}
+"} 
+[2024-11-04 13:48:18] local.ERROR: Uncaught Error: Class "App\Models\Tender" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Uncaught Error: Class \"App\\Models\\Tender\" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown at Command line code:1)
+[stacktrace]
+#0 {main}
+"} 
+[2024-11-04 13:48:37] local.ERROR: Uncaught Error: Class "App\Models\Tender" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Uncaught Error: Class \"App\\Models\\Tender\" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown at Command line code:1)
+[stacktrace]
+#0 {main}
+"} 
+[2024-11-04 13:48:37] local.ERROR: Uncaught Error: Class "App\Models\Tender" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Uncaught Error: Class \"App\\Models\\Tender\" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown at Command line code:1)
+[stacktrace]
+#0 {main}
+"} 
+[2024-11-04 13:48:38] local.ERROR: Uncaught Error: Class "App\Models\Tender" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Uncaught Error: Class \"App\\Models\\Tender\" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown at Command line code:1)
+[stacktrace]
+#0 {main}
+"} 

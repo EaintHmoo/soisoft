@@ -5,6 +5,7 @@ namespace App\Models\Buyer;
 use App\Models\User;
 use App\Models\Admin\Category;
 use App\Models\QuotationProposal;
+use App\Models\QuotationQuestion;
 use App\Models\TenderProposal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -94,7 +95,12 @@ class Quotation extends Model
 
     public function quotationProposals(): HasMany
     {
-        return $this->hasMany(TenderProposal::class, 'tender_id', 'id');
+        return $this->hasMany(QuotationProposal::class, 'quotation_id', 'id');
+    }
+
+    public function addendums(): HasMany
+    {
+        return $this->hasMany(QuotationAddendum::class, 'quotation_id');
     }
 
     public function quotation_proposals(): HasMany
@@ -107,9 +113,14 @@ class Quotation extends Model
         return $this->belongsToMany(User::class, 'quotation_proposals', 'quotation_id', 'bidder_id');
     }
 
+    public function questions(): HasMany
+    {
+        return $this->hasMany(QuotationQuestion::class, 'quotation_id', 'id');
+    }
+
     protected static function booted(): void
     {
-        static::deleting(function (Tender $record) {
+        static::deleting(function (Quotation $record) {
             $record->contacts()->detach();
         });
     }

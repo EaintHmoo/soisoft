@@ -96,7 +96,8 @@ class QuotationService
             'categories',
             'department',
             'project',
-            'contacts'
+            'contacts',
+            'addendums',
         ])->find($id);
         $data['quotationProposal'] = $data->quotation_proposals()->where('bidder_id', auth()->user()->id)->first();
         $data['quotationNdaAccept'] = QuotationNdaAccept::where('bidder_id', auth()->user()->id)

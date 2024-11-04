@@ -1,5 +1,13 @@
 <x-dynamic-component :component="$getEntryWrapperView()" :entry="$entry">
-    @foreach($getState() as $state)
+    @php
+        $arrayState = $getState();
+        if ($arrayState instanceof \Illuminate\Support\Collection) {
+            $arrayState = $arrayState->all();
+        }
+        if(is_null($arrayState)) $arrayState = [];
+    @endphp
+
+    @foreach($arrayState as $state)
     <div class="border border-grey-500 p-6">
         <dl class="border-b border-gray-200">
             <div class="sm:grid sm:grid-cols-3 py-2">

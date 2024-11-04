@@ -54,6 +54,7 @@ class QuotationResource extends JsonResource
                 ARRAY_FILTER_USE_KEY
             ),
             'tender_items' => QuotationDetailResource::collection($this->quotationItems),
+            'tender_addendums' => QuotationAddendumResource::collection($this->addendums),
             'tender_contacts' => QuotationContactResource::collection($this->contacts),
             'documents' => DocumentResource::collection($this->documents),
             'suppliers' => $this->suppliers->map(function ($value) {

@@ -5,7 +5,7 @@
 @import '<path-to-vendor>/awcodes/filament-table-repeater/resources/css/plugin.css';
 
 .fi-page-sub-navigation-sidebar {
-    @apply w-32
+    @apply w-36
 }
 
 /* @layer components { */

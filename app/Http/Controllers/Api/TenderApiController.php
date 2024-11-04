@@ -57,7 +57,8 @@ class TenderApiController extends Controller
             'subCategory',
             'department',
             'project',
-            'tenderContacts'
+            'tenderContacts',
+            'addendums',
         ])->find($id);
         $data['tenderProposal'] = $data->tenderProposals()->where('bidder_id', auth()->user()->id)->first();
         $data['tenderNdaAccept'] = TenderNdaAccept::where('bidder_id', auth()->user()->id)

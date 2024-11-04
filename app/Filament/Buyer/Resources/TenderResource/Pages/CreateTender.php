@@ -31,20 +31,22 @@ class CreateTender extends CreateRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('Preview')
-                ->icon('heroicon-m-document-text')
-                ->color(Color::Orange)
-                ->modalSubmitAction(false) //Remove Submit Button
-                ->modalCancelAction(false) 
-                ->action(fn () => $this->form->getState())
-                ->modalContent(
-                    fn($record): View => view('tender.tender-preview', ['record' => $record])
-                ),
+            // Actions\Action::make('Preview')
+            //     ->icon('heroicon-m-document-text')
+            //     ->color(Color::Orange)
+            //     ->modalSubmitAction(false) //Remove Submit Button
+            //     ->modalCancelAction(false) 
+            //     ->action(fn () => $this->form->getState())
+            //     ->modalContent(
+            //         fn($record): View => view('tender.tender-preview', ['record' => $record])
+            //     ),
             
             $this->getCreateFormAction()
-                ->label('Submit')
-                ->icon('heroicon-m-check-circle')
+                ->label('Save Draft')
+                ->color(Color::Yellow)
+                ->icon('heroicon-m-pencil-square')
                 ->formId('form'),
+                
             $this->getCancelFormAction()
                 ->icon('heroicon-m-x-circle')
                 ->formId('form'),
@@ -57,17 +59,38 @@ class CreateTender extends CreateRecord
         return [];
     }
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['tender_state'] = 'draft';
+        return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('edit', ['record' => $this->record]);
+    }
+
     protected function afterCreate(): void
     {
-        $details = [
-            'type' => 'Tender',
-            'title' => $this->record->tender_title,
-            'start_date' => $this->record->start_datetime,
-            'end_date' => $this->record->end_datetime,
-        ];
+        // $details = [
+        //     'type' => 'Tender',
+        //     'title' => $this->record->tender_title,
+        //     'start_date' => $this->record->start_datetime,
+        //     'end_date' => $this->record->end_datetime,
+        // ];
+        if($this->record->tender_state == 'published') {
+            $tender = $this->record;
 
-        $contacts = User::role('supplier')->pluck('email')->toArray();
-       
-        Mail::to($contacts)->send(new \App\Mail\NewTender($details));
+            $details = [
+                'title' => $tender->tender_title,
+                'category' => $tender->category->name,
+                'deadline' => $tender->end_datetime,
+                'url' => 'https://mptc.soisoft.com/tenders/'.$tender->id 
+            ];
+
+            $contacts = User::role('supplier')->pluck('email')->toArray();
+        
+            Mail::to($contacts)->send(new \App\Mail\NewTender($details));
+        }
     }
 }

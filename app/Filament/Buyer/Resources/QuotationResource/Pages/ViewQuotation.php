@@ -12,6 +12,14 @@ class ViewQuotation extends ViewRecord
 
     protected static ?string $navigationIcon = '';
 
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        if($parameters['record']['quotation_state'] == 'draft') {
+            return false;
+        }
+        return true;
+    }
+
     public static function getNavigationLabel(): string
     {
         return 'Overview';
@@ -24,6 +32,6 @@ class ViewQuotation extends ViewRecord
 
     public function getSubheading(): ?string
     {
-        return $this->record->department->name;
+        return $this->record->department != null ? $this->record->department->name : '';
     }
 }

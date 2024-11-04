@@ -2,12 +2,13 @@
 
 namespace App\Filament\Buyer\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Support\Arr;
 use App\Models\Admin\Category;
 use App\Models\Buyer\Quotation;
 use Filament\Infolists\Infolist;
@@ -17,13 +18,12 @@ use Filament\Resources\Pages\Page;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Radio;
 use App\Infolists\Components\Contact;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Support\Enums\Alignment;
+use Filament\Forms\Components\Wizard;
 use App\Infolists\Components\Overview;
 use App\Models\Admin\PrePopulatedData;
 use Filament\Forms\Components\Section;
@@ -35,7 +35,6 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Enums\FiltersLayout;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
@@ -48,19 +47,11 @@ use App\Infolists\Components\DocumentList;
 use Filament\Tables\Filters\TernaryFilter;
 use App\Infolists\Components\QuotationItem;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ViewEntry;
-use App\Infolists\Components\DescriptionList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Support\Enums\VerticalAlignment;
-use Filament\Infolists\Components\RepeatableEntry;
 use Awcodes\TableRepeater\Components\TableRepeater;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Buyer\Resources\QuotationResource\Pages;
-use Filament\Infolists\Components\Section as InfolistSection;
-use App\Filament\Buyer\Resources\QuotationResource\RelationManagers;
-use Filament\Forms\Components\Wizard;
 
 class QuotationResource extends Resource
 {
@@ -82,37 +73,45 @@ class QuotationResource extends Resource
                     Wizard\Step::make('General')
                         ->icon('heroicon-m-squares-2x2')
                         ->schema([
-                            Select::make('quotation_type')
-                                ->label('Quotation Type')
-                                ->options(
-                                    PrePopulatedData::where('type', 'type_of_sourcing')
-                                        ->where('data->type', 'Quotation')
-                                        ->get()
-                                        ->pluck('data.label', 'data.label')
-                                        ->toArray()
-                                )
-                                ->searchable()
-                                ->required(),
-                            
-                            Select::make('department_id')
-                                ->relationship('department', 'name')
-                                ->searchable()
-                                ->preload()
-                                ->createOptionForm([
-                                    TextInput::make('name')
-                                        ->required()
-                                        ->label('Department name')
-                                        ->placeholder('Placeholder')
-                                ])
-                                ->createOptionModalHeading('Create new department'),
-                            
-                            TextInput::make('reference_no')
-                                ->placeholder('MOESCHETQ24003387')
-                                ->required(),
-
                             TextInput::make('quotation_title')
                                 ->placeholder('RFQ Title')
                                 ->required()
+                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
+                                ->columnSpanFull(),
+
+                            Grid::make(2)
+                                ->schema([
+                                    Select::make('quotation_type')
+                                        ->label('Quotation Type')
+                                        ->options(
+                                            PrePopulatedData::where('type', 'type_of_sourcing')
+                                                ->where('data->type', 'Quotation')
+                                                ->get()
+                                                ->pluck('data.label', 'data.label')
+                                                ->toArray()
+                                        )
+                                        ->searchable()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
+                                    
+                                    Select::make('department_id')
+                                        ->relationship('department', 'name')
+                                        ->searchable()
+                                        ->preload()
+                                        ->createOptionForm([
+                                            TextInput::make('name')
+                                                ->required()
+                                                ->label('Department name')
+                                                ->placeholder('Placeholder')
+                                        ])
+                                        ->createOptionModalHeading('Create new department')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
+                                ]),
+                            
+                            TextInput::make('reference_no')
+                                ->placeholder('MOESCHETQ24003387')
+                                ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
                                 ->columnSpanFull(),
 
                             Select::make('categories')
@@ -123,18 +122,6 @@ class QuotationResource extends Resource
                                         return $query->where('parent_id', '!=', -1);
                                     }
                                 )
-                                // ->options(function() {
-                                //     $categories = Category::where('parent_id', '!=', -1)
-                                //                         ->get()
-                                //                         ->groupBy('parent.name');
-                                //     $to_return = [];
-                                    
-                                //     foreach($categories as $parent => $child) {
-                                //         $to_return[$parent] = $child->pluck('name', 'id')->toArray();
-                                //     }
-
-                                //     return $to_return;
-                                // })
                                 ->getSearchResultsUsing(function (string $search){
                                     return Category::where('parent_id', '!=', -1)
                                                         ->where('name', 'like', "%{$search}%")
@@ -143,7 +130,8 @@ class QuotationResource extends Resource
                                 })
                                 ->preload()
                                 ->multiple()
-                                ->required()
+                                ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
                                 ->columnSpanFull(),
                             
                             Grid::make(2)
@@ -151,15 +139,34 @@ class QuotationResource extends Resource
                                     DateTimePicker::make('start_datetime')
                                         ->label('Start Date and Time')
                                         ->helperText('The default timezone is Cambodia (GMT+7)')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
                                         ->placeholder('Jul 27, 2024 13:02:00')
-                                        ->native(false),
+                                        ->native(false)
+                                        ->minDate(function(Quotation $quotation, string $operation) {
+                                            if($operation == 'edit') {
+                                                return Carbon::parse($quotation->start_datetime);
+                                            }
+                                            return Carbon::now()->addDay();
+                                        })
+                                        ->maxDate(function(Quotation $quotation, string $operation) {
+                                            if($operation == 'edit') {
+                                                return Carbon::parse($quotation->start_datetime)->addYear();
+                                            }
+                                            return Carbon::now()->addYear();
+                                        })
+                                        ->live()
+                                        ->afterStateUpdated(function (Set $set) {
+                                            $set('end_datetime', null);
+                                        }),
                                 
                                     DateTimePicker::make('end_datetime')
                                         ->label('End Date and Time')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
                                         ->placeholder('Aug 28, 2024 12:00:00')
-                                        ->native(false),
+                                        ->native(false)
+                                        ->minDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addDay())
+                                        ->maxDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addYear()),
                                 ]),
 
                             Section::make('Sourcing Information') 
@@ -178,7 +185,8 @@ class QuotationResource extends Resource
                                                         ->toArray()
                                                 )
                                                 ->searchable()
-                                                ->required(),
+                                                ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                             
                                             Toggle::make('is_open_sourcing')
                                                 ->label('Open Sourcing')
@@ -189,6 +197,7 @@ class QuotationResource extends Resource
                                                 ->inline(false)
                                                 ->helperText('Turn off to add your selected bidders below')
                                                 ->live()
+                                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
                                         ]),
 
                                     Select::make('bidders')
@@ -200,9 +209,10 @@ class QuotationResource extends Resource
                                         )
                                         ->preload()
                                         ->multiple()
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
                                         ->columnSpanFull()
-                                        ->visible(fn (Get $get): bool => ! $get('is_open_sourcing')),
+                                        ->visible(fn (Get $get): bool => ! $get('is_open_sourcing'))
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     Select::make('project_id')
                                         ->relationship('project', 'name')
@@ -214,7 +224,8 @@ class QuotationResource extends Resource
                                                 ->label('Project name')
                                                 ->placeholder('Placeholder')
                                         ])
-                                        ->createOptionModalHeading('Create new project'),
+                                        ->createOptionModalHeading('Create new project')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     Select::make('mode_of_submission') 
                                         ->label('Mode of Submission')
@@ -225,7 +236,8 @@ class QuotationResource extends Resource
                                                 ->toArray()
                                         )
                                         ->searchable()
-                                        ->required(),
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     Select::make('currency')
                                         ->label('Base Currency')
@@ -236,7 +248,8 @@ class QuotationResource extends Resource
                                                 ->toArray()
                                         )
                                         ->searchable()
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                 ])
                                 ->columns(3),
 
@@ -245,12 +258,14 @@ class QuotationResource extends Resource
                                     TextInput::make('delivery_contact_person')
                                         ->label('Contact Person')
                                         ->placeholder('Placeholder')
-                                        ->required(),
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     Textarea::make('delivery_address')
                                         ->label('Delivery Address')
                                         ->placeholder('Placeholder')
-                                        ->required(),
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     Grid::make(2)
                                         ->schema([
@@ -262,6 +277,7 @@ class QuotationResource extends Resource
                                                 ])
                                                 ->default(true)
                                                 ->inline()
+                                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
                                         ])
                                 ]),
                             
@@ -274,14 +290,16 @@ class QuotationResource extends Resource
                                         ->onColor(Color::Gray)
                                         ->columnSpanFull()
                                         ->helperText('Upload the NDA file for supplier to download and sign')
-                                        ->live(),
+                                        ->live()
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     FileUpload::make('nda_document')
                                         ->hiddenLabel()
                                         ->acceptedFileTypes(['application/pdf'])
                                         ->helperText('Prefer to upload your NDA Document in PDF Document Format.')
                                         ->columnSpanFull()
-                                        ->visible(fn (Get $get): bool => $get('nda_required')),
+                                        ->visible(fn (Get $get): bool => $get('nda_required'))
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                 ]),
 
                             Section::make('Briefing Information') 
@@ -292,19 +310,22 @@ class QuotationResource extends Resource
                                         ->offIcon('heroicon-m-x-mark')
                                         ->onColor(Color::Gray)
                                         ->columnSpanFull()
-                                        ->live(),
+                                        ->live()
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
                                     DatePicker::make('briefing_date')
                                         ->placeholder('Jul 27, 2024')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
                                         ->native(false)
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                     TextInput::make('briefing_venue')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
                                         ->placeholder('Venue Name')
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                     RichEditor::make('briefing_details')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
                                         ->placeholder('Briefing details')
                                         ->disableToolbarButtons([
                                             'strike',
@@ -312,14 +333,22 @@ class QuotationResource extends Resource
                                             'attachFiles'
                                         ])
                                         ->columnSpanFull()
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                     FileUpload::make('briefing_documents')
                                         ->label('Briefing Documents')
                                         ->multiple()
                                         ->columnSpanFull()
-                                        ->acceptedFileTypes(['application/pdf'])
-                                        ->helperText('Prefer to upload your NDA Document in PDF Document Format.')
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->acceptedFileTypes([
+                                            'application/pdf',
+                                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                            'text/plain',
+                                        ])
+                                        ->helperText('Prefer to upload your Briefing Documents.')
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                                 ])
                                 ->columns(2)
                                 ->collapsible(),
@@ -338,7 +367,7 @@ class QuotationResource extends Resource
                                         ->placeholder('Description')
                                         ->columnSpanFull(),
                                     
-                                    Grid::make(3)
+                                    Grid::make(2)
                                         ->schema([
                                             Radio::make('type')
                                                 ->label('Item Type?')
@@ -348,12 +377,14 @@ class QuotationResource extends Resource
                                                 ])
                                                 ->default('goods')
                                                 ->inline()
+                                                ->live(),
                                         ]),
                                     
                                     TextInput::make('quantity')
                                         ->required()
                                         ->placeholder('Quantity')
-                                        ->numeric(),
+                                        ->numeric()
+                                        ->visible(fn(Get $get): bool => $get('type') == 'goods'),
 
                                     Select::make('uom')
                                         ->label('UOM')
@@ -364,12 +395,14 @@ class QuotationResource extends Resource
                                                 ->pluck('data.label', 'data.label')
                                                 ->toArray()
                                         )
-                                        ->searchable(),
+                                        ->searchable()
+                                        ->visible(fn(Get $get): bool => $get('type') == 'goods'),
 
                                     Select::make('category_id')
                                         ->relationship('category', 'name')
                                         ->searchable()
-                                        ->required(),
+                                        ->required()
+                                        ->columnSpan(fn(Get $get) => $get('type') == 'goods' ? 1 : 3),
 
                                     Grid::make(2)
                                         ->schema([
@@ -459,7 +492,11 @@ class QuotationResource extends Resource
                                 ->collapsed()
                                 ->defaultItems(0)
                                 ->addActionLabel('Add new')
-                                ->itemLabel(fn (array $state): ?string => $state['description'] ?? null),
+                                ->itemLabel(fn (array $state): ?string => $state['description'] ?? null)
+                                ->deleteAction(
+                                    fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                                )
+                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
                         ]),
 
                     Wizard\Step::make('Contacts')
@@ -484,7 +521,7 @@ class QuotationResource extends Resource
                                         ->allowHtml()
                                         ->searchable()
                                         ->preload()
-                                        ->required()
+                                        // ->required()
                                         ->createOptionForm([
                                             Section::make([
                                                 TextInput::make('contact_person')
@@ -520,8 +557,13 @@ class QuotationResource extends Resource
                                         ])
                                         ->createOptionModalHeading('Create new contact'),
                                 ])
-                                ->columnSpan('full')
+                                ->columnSpanFull()
+                                ->defaultItems(0)
                                 ->addActionLabel('Add contact')
+                                ->deleteAction(
+                                    fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                                )
+                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
                         ]),
 
                     Wizard\Step::make('Documents')
@@ -568,50 +610,51 @@ class QuotationResource extends Resource
                                         ->columnSpan(2),
                                 ])
                                 ->columns(2)
-                                ->grid(2)
                                 ->reorderable(false)
                                 ->collapsed()
                                 ->defaultItems(0)
                                 ->addActionLabel('Add new document')
-                                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+                                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                ->deleteAction(
+                                    fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                                )
                         ]),
-
-                    Wizard\Step::make('Checklist & State')
-                        ->icon('heroicon-m-clipboard-document-list')
-                        ->schema([
-                            Section::make('Publication Check List')
-                                ->schema([
-                                    CheckboxList::make('publication_check_list')
-                                            ->hiddenLabel()
-                                            ->required()
-                                            ->options([
-                                                'clearly_defined' => 'All requirements are clearly defined',
-                                                'documents_are_completed' => 'All tender documents are completed and checked in to the system',
-                                                'contract_terms_and_conditions' => 'All contract terms & conditions and contract compliance statements',
-                                                'rfp_terms_and_conditions' => 'All RFP terms & conditions and connected party dicisions',
-                                            ])
-                                ])
-                                ->columnSpan(1),
-
-                            Section::make('Tender State')
-                                ->schema([
-                                    Radio::make('quotation_state')
-                                        ->hiddenLabel()
-                                        ->options([
-                                            'draft' => 'Draft for Review',
-                                            'review' => 'Review for Approve',
-                                            'approved' => 'Approved for Publish',
-                                            'published' => 'Publish'
-                                        ])
-                                        ->default('draft')
-                                ])
-                                ->columnSpan(1)
-                        ])->columns(2)
                 ])
                 ->persistStepInQueryString()
-                ->skippable(fn(string $operation): bool => $operation === 'edit')
+                ->skippable(true)
+                ->columnSpan(fn(string $operation) => $operation == 'create' ? 4 : 3),
+                // ->skippable(fn(string $operation): bool => $operation === 'edit')
+
+                Section::make([
+                    CheckboxList::make('publication_check_list')
+                            ->hiddenLabel()
+                            ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                            ->options([
+                                'clearly_defined' => 'All requirements are clearly defined',
+                                'documents_are_completed' => 'All tender documents are completed and checked in to the system',
+                                'contract_terms_and_conditions' => 'All contract terms & conditions and contract compliance statements',
+                                'rfp_terms_and_conditions' => 'All RFP terms & conditions and connected party dicisions',
+                            ])
+                            ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
+
+                    Section::make([
+                            Radio::make('quotation_state')
+                                ->hiddenLabel()
+                                ->live()
+                                ->options([
+                                    'draft' => 'Draft',
+                                    'review' => 'Review',
+                                    // 'approved' => 'Approved for Publish',
+                                    'published' => 'Publish'
+                                ])
+                                ->default('draft')
+                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
+                        ])
+                ])
+                ->hiddenOn('create')
+                ->columnSpan(1),
             ])
-            ->columns(1);
+            ->columns(4);
     }
 
     public static function table(Table $table): Table
@@ -626,6 +669,21 @@ class QuotationResource extends Resource
                     
                     TextColumn::make('quotation_state')
                         ->badge()
+                        ->color(fn (string $state): string => match ($state) {
+                            'draft' => 'danger',
+                            'review' => 'warning',
+                            'published' => 'primary',
+                        })
+                        ->icons([
+                            'heroicon-m-pencil-square' => 'draft',
+                            'heroicon-m-arrow-path' => 'review',
+                            'heroicon-m-check' => 'published',
+                        ])
+                        ->formatStateUsing(fn (string $state): string => match($state) {
+                            'draft' => 'Draft',
+                            'review' => 'In Review',
+                            'published' => 'Published',
+                        })
                         ->alignEnd()
                         ->verticalAlignment(VerticalAlignment::Start)
                 ]),
@@ -761,7 +819,17 @@ class QuotationResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     // Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(
+                function(Model $record) {
+                    if($record->quotation_state == 'draft') {
+                        return static::getUrl('edit', ['record' => $record]);
+                    } else {
+                        return static::getUrl('view', ['record' => $record]);
+                    }
+                }
+            )
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -947,18 +1015,24 @@ class QuotationResource extends Resource
             'bids' => Pages\ManageBids::route('/{record}/bids'),
             'awardings' => Pages\Awarding::route('/{record}/awardings'),
             'awardeds' => Pages\Awarded::route('/{record}/awardeds'),
+            'addendums' => Pages\ManageAddendum::route('/{record}/addendums'),
+            'questions' => Pages\ManageQuestion::route('/{record}/questions'),
         ];
     }
 
     public static function getRecordSubNavigation(Page $page): array
     {
-        return $page->generateNavigationItems([
+        $navitems = [
             Pages\ViewQuotation::class,
             Pages\EditQuotation::class,
+            Pages\ManageAddendum::class,
             Pages\ManageBids::class,
             Pages\Awarding::class,
             Pages\Awarded::class,
-        ]);
+            Pages\ManageQuestion::class
+        ];
+
+        return $page->generateNavigationItems($navitems);
     }
 
     public static function getNavigationBadge(): ?string

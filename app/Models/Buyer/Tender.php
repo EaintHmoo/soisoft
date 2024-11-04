@@ -5,6 +5,7 @@ namespace App\Models\Buyer;
 use App\Models\Admin\TenderCategory;
 use App\Models\Admin\Category;
 use App\Models\TenderProposal;
+use App\Models\TenderQuestion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -112,6 +113,16 @@ class Tender extends Model
     public function tenderProposals(): HasMany
     {
         return $this->hasMany(TenderProposal::class, 'tender_id', 'id');
+    }
+
+    public function addendums(): HasMany
+    {
+        return $this->hasMany(TenderAddendum::class, 'tender_id');
+    }
+
+    public function questions(): HasMany
+    {
+        return $this->hasMany(TenderQuestion::class, 'tender_id', 'id');
     }
 
     protected static function booted(): void

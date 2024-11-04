@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class NewTender extends Mailable
+class Awarded extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -28,12 +28,8 @@ class NewTender extends Mailable
      */
     public function envelope(): Envelope
     {
-        // return new Envelope(
-        //     subject: 'New Tender',
-        // );
-
         return new Envelope(
-            subject: 'New Tender/Quotation Available - ' . $this->details['title'],
+            subject: 'Congratulations - Tender/Quotation Award for '. $this->details['title'],
         );
     }
 
@@ -43,7 +39,7 @@ class NewTender extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'email.new-tender-notify',
+            markdown: 'email.awarded',
         );
     }
 

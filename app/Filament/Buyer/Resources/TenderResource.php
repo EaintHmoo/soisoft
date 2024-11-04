@@ -2,6 +2,7 @@
 
 namespace App\Filament\Buyer\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Get;
@@ -16,20 +17,16 @@ use Awcodes\TableRepeater\Header;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\HtmlString;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
-use App\Models\Admin\TenderCategory;
 use Filament\Forms\Components\Radio;
 use App\Infolists\Components\Contact;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Wizard;
 use App\Infolists\Components\Overview;
 use App\Models\Admin\PrePopulatedData;
 use Filament\Forms\Components\Section;
 use Filament\Support\Enums\FontWeight;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
@@ -45,14 +42,9 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Infolists\Components\DocumentList;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Infolists\Components\TextEntry;
-use App\Infolists\Components\DescriptionList;
 use Filament\Forms\Components\DateTimePicker;
 use Awcodes\TableRepeater\Components\TableRepeater;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Buyer\Resources\TenderResource\Pages;
-use Filament\Infolists\Components\Section as InfolistSection;
-use App\Filament\Buyer\Resources\TenderResource\RelationManagers;
-use Filament\Forms\Components\Wizard;
 
 class TenderResource extends Resource
 {
@@ -76,9 +68,16 @@ class TenderResource extends Resource
                     Wizard\Step::make('General')
                         ->icon('heroicon-m-squares-2x2')
                         ->schema([
+                            TextInput::make('tender_title')
+                                ->required()
+                                ->columnSpanFull()
+                                ->placeholder('Placeholder')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
+                                
                             TextInput::make('tender_no')
                                 ->placeholder('LTA00ETT24000051')
-                                ->required(),
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                             Select::make('department_id')
                                 ->relationship('department', 'name')
                                 ->searchable()
@@ -89,11 +88,8 @@ class TenderResource extends Resource
                                         ->label('Department name')
                                         ->placeholder('Placeholder')
                                 ])
-                                ->createOptionModalHeading('Create new department'),
-                            TextInput::make('tender_title')
-                                ->required()
-                                ->columnSpanFull()
-                                ->placeholder('Placeholder'),
+                                ->createOptionModalHeading('Create new department')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                 
                             Select::make('category_id') 
                                 ->relationship(
@@ -107,7 +103,7 @@ class TenderResource extends Resource
                                 })
                                 ->label('Tender Category')
                                 // ->preload()
-                                ->required()
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                 ->searchable()
                                 ->getSearchResultsUsing(function (string $search): array {
                                     $parent_ids = Category::query()
@@ -124,7 +120,8 @@ class TenderResource extends Resource
                                         ->where('parent_id', -1)
                                         ->pluck('name', 'id')
                                         ->toArray();
-                                }),
+                                })
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                             Select::make('sub_category_id') //category data from admin dashboard
                                 ->label('Tender Sub Category')
@@ -134,7 +131,8 @@ class TenderResource extends Resource
                                     modifyQueryUsing: fn (Builder $query, Get $get) => $query->where('parent_id', $get('category_id'))
                                 )
                                 ->preload()
-                                ->searchable(),
+                                ->searchable()
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                             Select::make('project_id') //data source ?
                                 ->relationship('project', 'name')
@@ -148,20 +146,40 @@ class TenderResource extends Resource
                                         ->placeholder('Placeholder')
                                 ])
                                 ->createOptionModalHeading('Create new project')
-                                ->columnSpanFull(),
+                                ->columnSpanFull()
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                             DateTimePicker::make('start_datetime')
                                 ->label('Start Date and Time')
                                 ->helperText('The default timezone is Cambodia (GMT+7)')
-                                ->required()
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                 ->placeholder('Jul 27, 2024 13:02:00')
-                                ->native(false),
+                                ->native(false)
+                                ->minDate(function(Tender $tender, string $operation) {
+                                    if($operation == 'edit') {
+                                        return Carbon::parse($tender->start_datetime);
+                                    }
+                                    return Carbon::now()->addDay();
+                                })
+                                ->maxDate(function(Tender $tender, string $operation) {
+                                    if($operation == 'edit') {
+                                        return Carbon::parse($tender->start_datetime)->addYear();
+                                    }
+                                    return Carbon::now()->addYear();
+                                })
+                                ->live()
+                                ->afterStateUpdated(function (Set $set) {
+                                    $set('end_datetime', null);
+                                })
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                             
                             DateTimePicker::make('end_datetime')
                                 ->label('End Date and Time')
-                                ->required()
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                 ->placeholder('Aug 28, 2024 12:00:00')
-                                ->native(false),
+                                ->native(false)
+                                ->minDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addDay())
+                                ->maxDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addYear()),
 
                             Select::make('evaluation_type')
                                 ->label('Evaluation Type')
@@ -173,7 +191,8 @@ class TenderResource extends Resource
                                 )
                                 ->searchable()
                                 ->helperText('Internal use only')
-                                ->required(),
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                             Select::make('type_of_sourcing')
                                 ->label('Type of Sourcing/Tenders')
@@ -186,7 +205,8 @@ class TenderResource extends Resource
                                 )
                                 ->searchable()
                                 ->live()
-                                ->required(),
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                             Section::make([
                                 Select::make('bidders')
@@ -198,8 +218,9 @@ class TenderResource extends Resource
                                     )
                                     ->preload()
                                     ->multiple()
-                                    ->required()
+                                    ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                     ->columnSpanFull()
+                                    ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published')
                             ])->visible(fn (Get $get): bool => $get('type_of_sourcing') == 'Closed/Selective Tender'),
                             
                             Select::make('currency') // data source ?
@@ -211,7 +232,8 @@ class TenderResource extends Resource
                                         ->toArray()
                                 )
                                 ->searchable()
-                                ->required()
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published')
                                 ->helperText('Exchange rates will be based on the day of submission'),
                             
                             Select::make('mode_of_submission') 
@@ -223,7 +245,8 @@ class TenderResource extends Resource
                                         ->toArray()
                                 )
                                 ->searchable()
-                                ->required(),
+                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                             Section::make('NDA') 
                                 ->schema([
@@ -233,14 +256,16 @@ class TenderResource extends Resource
                                         ->offIcon('heroicon-m-x-mark')
                                         ->onColor(Color::Gray)
                                         ->columnSpanFull()
-                                        ->live(),
+                                        ->live()
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                                     FileUpload::make('nda_document')
                                         ->label('NDA Document')
                                         ->acceptedFileTypes(['application/pdf'])
                                         ->helperText('Prefer to upload your NDA Document in PDF Document Format.')
                                         ->columnSpanFull()
-                                        ->visible(fn (Get $get): bool => $get('nda_required')),
+                                        ->visible(fn (Get $get): bool => $get('nda_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                 ]),
                             
                             Section::make('Tender Briefing Information') 
@@ -251,19 +276,22 @@ class TenderResource extends Resource
                                         ->offIcon('heroicon-m-x-mark')
                                         ->onColor(Color::Gray)
                                         ->columnSpanFull()
-                                        ->live(),
+                                        ->live()
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                                     DatePicker::make('briefing_date')
                                         ->placeholder('Jul 27, 2024')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                         ->native(false)
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                     TextInput::make('briefing_venue')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                         ->placeholder('Venue Name')
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                     RichEditor::make('briefing_details')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                         ->placeholder('Briefing details')
                                         ->disableToolbarButtons([
                                             'strike',
@@ -271,14 +299,22 @@ class TenderResource extends Resource
                                             'attachFiles'
                                         ])
                                         ->columnSpanFull()
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                     FileUpload::make('briefing_documents')
                                         ->label('Briefing Documents')
                                         ->multiple()
                                         ->columnSpanFull()
-                                        ->acceptedFileTypes(['application/pdf'])
+                                        ->acceptedFileTypes([
+                                            'application/pdf',
+                                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                            'text/plain',
+                                        ])
                                         ->helperText('Prefer to upload your NDA Document in PDF Document Format.')
-                                        ->visible(fn (Get $get): bool => $get('briefing_information_required')),
+                                        ->visible(fn (Get $get): bool => $get('briefing_information_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                 ])
                                 ->columns(2)
                                 ->collapsible(),
@@ -291,23 +327,26 @@ class TenderResource extends Resource
                                         ->offIcon('heroicon-m-x-mark')
                                         ->onColor(Color::Gray)
                                         ->columnSpanFull()
-                                        ->live(),
+                                        ->live()
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
 
                                     TextInput::make('tender_fees')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                         ->label('Tender Fees')
                                         ->numeric()
                                         ->prefixIcon('heroicon-m-currency-dollar')
-                                        ->visible(fn (Get $get): bool => $get('fees_required')),
+                                        ->visible(fn (Get $get): bool => $get('fees_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                     RichEditor::make('tender_fees_information')
-                                        ->required()
+                                        ->required(fn(Get $get) => $get('tender_state') != 'draft')
                                         ->placeholder('Tender Fees Information')
                                         ->disableToolbarButtons([
                                             'strike',
                                             'codeBlock',
                                             'attachFiles'
                                         ])
-                                        ->visible(fn (Get $get): bool => $get('fees_required')),
+                                        ->visible(fn (Get $get): bool => $get('fees_required'))
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                                     // FileUpload::make('fees_documents')
                                     //     ->label('Tender Fees Documents')
                                     //     ->multiple()
@@ -327,6 +366,7 @@ class TenderResource extends Resource
                                             'codeBlock',
                                             'attachFiles'
                                         ])
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published')
                                 ])
                                 ->collapsed(),
                             Section::make('External Additional Tender Information (Outside Bidder can view)') 
@@ -339,6 +379,7 @@ class TenderResource extends Resource
                                             'codeBlock',
                                             'attachFiles'
                                         ])
+                                        ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published')
                                 ])
                                 ->collapsed(),
                         ])->columns(2),
@@ -405,7 +446,11 @@ class TenderResource extends Resource
                                 ->collapsed()
                                 ->defaultItems(0)
                                 ->addActionLabel('Add new')
-                                ->itemLabel(fn (array $state): ?string => $state['specifications'] ?? null),
+                                ->itemLabel(fn (array $state): ?string => $state['specifications'] ?? null)
+                                ->deleteAction(
+                                    fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                                )
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                         ])
                         ->columns(1),
                         
@@ -468,7 +513,12 @@ class TenderResource extends Resource
                                         ->createOptionModalHeading('Create new contact'),
                                 ])
                                 ->columnSpan('full')
+                                ->defaultItems(0)
                                 ->addActionLabel('Add contact')
+                                ->deleteAction(
+                                    fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                                )
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published')
                         ]),
 
                     Wizard\Step::make('Documents')
@@ -514,66 +564,65 @@ class TenderResource extends Resource
                                         ->directory('tender-documents')
                                         ->columnSpanFull(),
                                         
-                                    Section::make('Document Config')
-                                        ->schema([
-                                            Toggle::make('comparable')
-                                                ->label('This Document is Comparable')
-                                                ->helperText('To be able to comparable, File must be excel file (.xlsx, .xls) with defined columns for both Questions and Answers.')
-                                                ->columnSpanFull(),
+                                    
+                                        // Toggle::make('comparable')
+                                        //     ->label('This Document is Comparable')
+                                        //     ->helperText('To be able to comparable, File must be excel file (.xlsx, .xls) with defined columns for both Questions and Answers.')
+                                        //     ->columnSpanFull(),
 
-                                            TextInput::make('question_columns')
-                                                ->label('Question Col Range')
-                                                ->placeholder('C8:C24'),
-                                            
-                                            TextInput::make('answer_columns')
-                                                ->label('Answer Col Range')
-                                                ->placeholder('D8:D24'),
-                                        ])->columns(2)
+                                        // TextInput::make('question_columns')
+                                        //     ->label('Question Col Range')
+                                        //     ->placeholder('C8:C24'),
+                                        
+                                        // TextInput::make('answer_columns')
+                                        //     ->label('Answer Col Range')
+                                        //     ->placeholder('D8:D24'),
                                 ])
                                 ->columns(2)
-                                ->grid(2)
                                 ->reorderable(false)
                                 ->collapsed()
                                 ->defaultItems(0)
                                 ->addActionLabel('Add new document')
+                                ->deleteAction(
+                                    fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                                )
                                 ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
                         ]),
-
-                    Wizard\Step::make('Checklist & State')
-                        ->icon('heroicon-m-clipboard-document-list')
-                        ->schema([
-                            Section::make('Publication Check List')
-                                ->schema([
-                                    CheckboxList::make('publication_check_list')
-                                            ->hiddenLabel()
-                                            ->required()
-                                            ->options([
-                                                'clearly_defined' => 'All requirements are clearly defined',
-                                                'documents_are_completed' => 'All tender documents are completed and checked in to the system',
-                                                'contract_terms_and_conditions' => 'All contract terms & conditions and contract compliance statements',
-                                                'rfp_terms_and_conditions' => 'All RFP terms & conditions and connected party dicisions',
-                                            ])
-                                ])
-                                ->columnSpan(1),
-
-                            Section::make('Tender State')
-                                ->schema([
-                                    Radio::make('tender_state')
-                                        ->hiddenLabel()
-                                        ->options([
-                                            'draft' => 'Draft for Review',
-                                            'review' => 'Review for Approve',
-                                            'approved' => 'Approved for Publish',
-                                            'published' => 'Publish'
-                                        ])
-                                        ->default('draft')
-                                ])
-                                ->columnSpan(1)
-                        ])->columns(2)
                 ])
                 ->persistStepInQueryString()
-                ->skippable(fn(string $operation): bool => $operation === 'edit')
-            ])->columns(1);
+                ->skippable(true)
+                ->columnSpan(fn(string $operation) => $operation == 'create' ? 4 : 3),
+                // ->skippable(fn(string $operation): bool => $operation === 'edit')
+
+                Section::make([
+                    CheckboxList::make('publication_check_list')
+                            ->hiddenLabel()
+                            ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                            ->options([
+                                'clearly_defined' => 'All requirements are clearly defined',
+                                'documents_are_completed' => 'All tender documents are completed and checked in to the system',
+                                'contract_terms_and_conditions' => 'All contract terms & conditions and contract compliance statements',
+                                'rfp_terms_and_conditions' => 'All RFP terms & conditions and connected party dicisions',
+                            ])
+                            ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
+
+                    Section::make([
+                            Radio::make('tender_state')
+                                ->hiddenLabel()
+                                ->live()
+                                ->options([
+                                    'draft' => 'Draft',
+                                    'review' => 'Review',
+                                    // 'approved' => 'Approved for Publish',
+                                    'published' => 'Publish'
+                                ])
+                                ->default('draft')
+                                ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published')
+                        ])
+                ])
+                ->hiddenOn('create')
+                ->columnSpan(1),
+            ])->columns(4);
     }
 
     public static function table(Table $table): Table
@@ -583,12 +632,32 @@ class TenderResource extends Resource
                 TextColumn::make('tender_title')
                     ->label('Tender Title')
                     ->grow()
+                    ->wrap()
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('category.name')
                     ->label('Category')
+                    ->wrap()
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('tender_state')
+                    ->label('State')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'draft' => 'danger',
+                        'review' => 'warning',
+                        'published' => 'primary',
+                    })
+                    ->icons([
+                        'heroicon-m-pencil-square' => 'draft',
+                        'heroicon-m-arrow-path' => 'review',
+                        'heroicon-m-check' => 'published',
+                    ])
+                    ->formatStateUsing(fn (string $state): string => match($state) {
+                        'draft' => 'Draft',
+                        'review' => 'In Review',
+                        'published' => 'Published',
+                    }),
                 TextColumn::make('start_datetime')
                     ->label('Start Date')
                     ->dateTime()
@@ -689,14 +758,24 @@ class TenderResource extends Resource
             ->filtersFormWidth('4xl')
             ->filtersFormColumns(3)
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
+                // Tables\Actions\EditAction::make(),
+                // Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(
+                function(Model $record) {
+                    if($record->tender_state == 'draft') {
+                        return static::getUrl('edit', ['record' => $record]);
+                    } else {
+                        return static::getUrl('view', ['record' => $record]);
+                    }
+                }
+            )
+            ->defaultSort('created_at', 'desc');;
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -853,9 +932,11 @@ class TenderResource extends Resource
         return $page->generateNavigationItems([
             Pages\ViewTender::class,
             Pages\EditTender::class,
+            Pages\ManageAddendum::class,
             Pages\ManageBids::class,
             Pages\Awarding::class,
             Pages\Awarded::class,
+            Pages\ManageQuestion::class
         ]);
     }
 
@@ -876,6 +957,8 @@ class TenderResource extends Resource
             'bids' => Pages\ManageBids::route('/{record}/bids'),
             'awardings' => Pages\Awarding::route('/{record}/awardings'),
             'awardeds' => Pages\Awarded::route('/{record}/awardeds'),
+            'addendums' => Pages\ManageAddendum::route('/{record}/addendums'),
+            'questions' => Pages\ManageQuestion::route('/{record}/questions'),
         ];
     }
 

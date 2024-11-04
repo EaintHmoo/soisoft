@@ -1,15 +1,17 @@
 <x-mail::message>
-<h2 style="text-align: center;margin-bottom:1rem;">New {{ $details['type'] }} is available</h2>
-<h1>{{ $details['title'] }}</h1>
-<p>Start Date - {{ $details['start_date'] }}</p>
-<p>End Date - {{ $details['end_date'] }}</p>
-<x-mail::panel>
-    <x-mail::button :url="$url" color="success">
-        View {{ $details['type'] }}
-    </x-mail::button>
-</x-mail::panel>
+### Dear Supplier,  
+We are pleased to inform you of a new tender/quotation opportunity in your area of expertise. Details are as follows:  
+    
+- **Tender/Quotation Title:** {{ $details['title'] }}  
+- **Category:** {{ $details['category'] }}  
+- **Submission Deadline:** {{ $details['deadline'] }}  
+    
+We invite you to review the details and submit your response by the specified deadline. Please visit your dashboard to view and participate in this tender.  
 
+**Access the Tender/Quotation:** {{ $details['url'] }}  
+Should you have any questions or require further clarification, please don’t hesitate to reach out.  
 
-Thank you,<br>
-{{ config('app.name') }}
+**Best regards,**  
+Tender Management Team  
+MPTC eProcurement  
 </x-mail::message>

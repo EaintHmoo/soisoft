@@ -5,12 +5,14 @@ namespace App\Filament\Buyer\Resources\QuotationResource\Pages;
 use Filament\Tables;
 use Filament\Actions;
 use Filament\Tables\Table;
-use App\Models\TenderProposal;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Resources\Pages\ManageRelatedRecords;
 use App\Filament\Buyer\Resources\QuotationResource;
+use App\Models\QuotationProposal;
+use App\Models\User;
 
 class Awarding extends ManageRelatedRecords
 {
@@ -19,6 +21,14 @@ class Awarding extends ManageRelatedRecords
     protected static string $relationship = 'quotationProposals';
 
     protected static ?string $navigationIcon = '';
+
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        if($parameters['record']['quotation_state'] == 'published') {
+            return true;
+        }
+        return false;
+    }
 
     public function table(Table $table): Table
     {
@@ -51,21 +61,35 @@ class Awarding extends ManageRelatedRecords
                     ->icon('heroicon-o-x-mark')
                     ->color(Color::Rose)
                     ->requiresConfirmation()
-                    ->action(function (TenderProposal $record) {
+                    ->action(function (QuotationProposal $record) {
                         $record->status = 'disqualify';
                         $record->save();
                     })
-                    ->disabled(fn (TenderProposal $record): bool => $record->status == 'disqualify'),
+                    ->disabled(fn (QuotationProposal $record): bool => $record->status == 'disqualify'),
                 Action::make('Award')
                     ->icon('heroicon-o-trophy')
                     ->button()
                     ->outlined()
                     ->requiresConfirmation()
-                    ->action(function (TenderProposal $record) {
+                    ->action(function (QuotationProposal $record) {
                         $record->status = 'awarded';
                         $record->save();
+                        
+                        $suppliers = User::whereIn('id', $this->record->quotationProposals()->pluck('bidder_id')->toArray())->get()->pluck('email')->toArray();
+                        
+                        //Send congratulation mail to bidder
+                        $details = [
+                            'title' => $this->record->quotation_title,
+                            'category' => implode(', ', $this->record->categories()->pluck('name')->toArray()),
+                            'supplier' =>  $record->bidder->name
+                        ];
+                        Mail::to([$record->bidder->email])->send(new \App\Mail\Awarded($details));
+
+                        //Send to all participate suppliers
+                        Mail::to($suppliers)->send(new \App\Mail\AwardedNotification($details));
+
                     })
-                    ->disabled(fn (TenderProposal $record): bool => $record->status == 'awarded'),
+                    ->disabled(fn (QuotationProposal $record): bool => $record->status == 'awarded'),
                 // Tables\Actions\EditAction::make(),
                 // Tables\Actions\DissociateAction::make(),
                 // Tables\Actions\DeleteAction::make(),

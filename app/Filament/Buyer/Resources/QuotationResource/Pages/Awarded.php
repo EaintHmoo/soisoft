@@ -20,6 +20,14 @@ class Awarded extends ManageRelatedRecords
 
     protected static ?string $navigationIcon = '';
 
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        if($parameters['record']['quotation_state'] == 'published') {
+            return true;
+        }
+        return false;
+    }
+
     public function table(Table $table): Table
     {
         return $table
