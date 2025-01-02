@@ -63,6 +63,11 @@ class TenderApiController extends Controller
         $data['tenderProposal'] = $data->tenderProposals()->where('bidder_id', auth()->user()->id)->first();
         $data['tenderNdaAccept'] = TenderNdaAccept::where('bidder_id', auth()->user()->id)
             ->where('tender_id', $id)->first();
+        $data['tenderDocuments'] = $data->documents()
+            ->where(function ($query) {
+                $query->where('document_by_id', auth()->user()->id)
+                    ->orWhereNull('document_by_id');
+            })->get();
         return response()
             ->json([
                 'data' => new TenderResource($data),
@@ -81,6 +86,7 @@ class TenderApiController extends Controller
                 $query->where('question', 'like', '%' . $request->keyword . '%')
                     ->orWhere('answer', 'like', '%' . $request->keyword . '%');
             })
+            ->where('question_by_id', auth()->user()->id)
             ->get();
         return response()
             ->json([

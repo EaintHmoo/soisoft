@@ -2,6 +2,7 @@
 
 namespace App\Models\Buyer;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,8 +21,13 @@ class QuotationDocument extends Model
         'comment',
     ];
 
-    public function quotation(): BelongsTo 
+    public function quotation(): BelongsTo
     {
         return $this->belongsTo(Quotation::class, 'quotation_id');
+    }
+
+    public function document_by(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'document_by_id');
     }
 }

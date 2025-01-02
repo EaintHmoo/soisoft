@@ -28,6 +28,8 @@ class DocumentResource extends JsonResource
             'comparable'    => $this->comparable,
             'document_by'   => $this->document_by?->name,
             'comment'       => $this->comment,
+            'file_size'       => $this->document_path ? getFileSize($this->document_path) : null,
+            'created_at'       => $this->created_at,
         ];
     }
 }

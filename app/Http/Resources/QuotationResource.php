@@ -56,7 +56,7 @@ class QuotationResource extends JsonResource
             'tender_items' => QuotationDetailResource::collection($this->quotationItems),
             'tender_addendums' => QuotationAddendumResource::collection($this->addendums),
             'tender_contacts' => QuotationContactResource::collection($this->contacts),
-            'documents' => DocumentResource::collection($this->documents),
+            'documents' => DocumentResource::collection($this->quotationDocuments),
             'suppliers' => $this->suppliers->map(function ($value) {
                 return $value?->name;
             }),

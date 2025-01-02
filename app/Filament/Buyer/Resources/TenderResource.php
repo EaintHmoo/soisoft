@@ -45,6 +45,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\DateTimePicker;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use App\Filament\Buyer\Resources\TenderResource\Pages;
+use Guava\FilamentClusters\Forms\Cluster;
 
 class TenderResource extends Resource
 {
@@ -168,18 +169,43 @@ class TenderResource extends Resource
                                     return Carbon::now()->addYear();
                                 })
                                 ->live()
-                                ->afterStateUpdated(function (Set $set) {
-                                    $set('end_datetime', null);
+                                ->afterStateUpdated(function (Set $set, Get $get) {
+                                    $end_in_days = $get('end_in_days');
+                                    if($end_in_days != null) {
+                                        $set('end_datetime', Carbon::parse($get('start_datetime'))->addDays((int) $end_in_days));
+                                    } else {
+                                        $set('end_datetime', null);
+                                    }
                                 })
                                 ->disabled(fn(string $operation, Get $get, Tender $tender):bool => $operation == 'edit' && $get('tender_state') == 'published' && $tender->tender_state == 'published'),
                             
-                            DateTimePicker::make('end_datetime')
-                                ->label('End Date and Time')
-                                ->required(fn(Get $get) => $get('tender_state') != 'draft')
-                                ->placeholder('Aug 28, 2024 12:00:00')
-                                ->native(false)
-                                ->minDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addDay())
-                                ->maxDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addYear()),
+                            Cluster::make([
+                                Select::make('end_in_days')
+                                    ->placeholder('Days')
+                                    ->options([
+                                        7 => '7 Days',
+                                        14 => '14 Days',
+                                        21 => '21 Days',
+                                        30 => '30 Days',
+                                        60 => '60 Days',
+                                        90 => '90 Days'
+                                    ])
+                                    ->native(false)
+                                    ->live()
+                                    ->afterStateUpdated(function (Set $set, Get $get) {
+                                        $set('end_datetime', Carbon::parse($get('start_datetime'))->addDays((int) $get('end_in_days')));
+                                    }),
+                                DateTimePicker::make('end_datetime')
+                                    ->label('End Date and Time')
+                                    ->required(fn(Get $get) => $get('tender_state') != 'draft')
+                                    ->placeholder('Aug 28, 2024 12:00:00')
+                                    ->native(false)
+                                    ->minDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addDay())
+                                    ->maxDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addYear())
+                                    ->columnSpan(2),
+                            ])
+                            ->label('End Date and Time')
+                            ->columns(3),
 
                             Select::make('evaluation_type')
                                 ->label('Evaluation Type')
@@ -558,9 +584,10 @@ class TenderResource extends Resource
                                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                                             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                                            'text/plain'
+                                            'text/plain',
+                                            'application/zip'
                                         ])
-                                        ->helperText('Support Types: pdf, docx, xlsx, pptx, txt.')
+                                        ->helperText('Support Types: zip, pdf, docx, xlsx, pptx, txt.')
                                         ->directory('tender-documents')
                                         ->columnSpanFull(),
                                         

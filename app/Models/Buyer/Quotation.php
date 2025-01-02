@@ -42,6 +42,7 @@ class Quotation extends Model
         'publication_check_list',
         'quotation_state',
         'quotation_status',
+        'end_in_days'
     ];
 
     protected $casts = [

@@ -34,9 +34,9 @@ class TenderProposal extends Model
         return $this->belongsTo(Tender::class, 'tender_id');
     }
 
-    public function quotation() {
-        return $this->belongsTo(Quotation::class, 'tender_id');
-    }
+    // public function quotation() {
+    //     return $this->belongsTo(Quotation::class, 'tender_id');
+    // }
 
     public function bidder() {
         return $this->belongsTo(User::class, 'bidder_id');

@@ -23,6 +23,7 @@ class QuotationPropsalApiController extends Controller
             // 'tender_fee_receipt' => 'required|mimes:docx,xlsx,pdf,ppt,txt',
             'quotation_fee_receipt' => 'required',
             'checklist_before_submit' => 'required',
+            'items' => 'nullable|array',
         ]);
         try {
             DB::beginTransaction();

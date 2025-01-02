@@ -3,6 +3,7 @@
 namespace App\Http\Services\Api;
 
 use App\Helpers\FileUpload;
+use App\Models\BidQuotationItem;
 use App\Models\Buyer\Quotation;
 use App\Models\Buyer\QuotationDocument;
 use App\Models\QuotationNdaAccept;
@@ -102,6 +103,12 @@ class QuotationService
         $data['quotationProposal'] = $data->quotation_proposals()->where('bidder_id', auth()->user()->id)->first();
         $data['quotationNdaAccept'] = QuotationNdaAccept::where('bidder_id', auth()->user()->id)
             ->where('quotation_id', $id)->first();
+        $data['quotationDocuments'] = $data->documents()
+            ->where(function ($query) {
+                $query->where('document_by_id', auth()->user()->id)
+                    ->orWhereNull('document_by_id');
+            })->get();
+
         return $data;
     }
 
@@ -116,6 +123,7 @@ class QuotationService
                 $query->where('question', 'like', '%' . $request->keyword . '%')
                     ->orWhere('answer', 'like', '%' . $request->keyword . '%');
             })
+            ->where('question_by_id', auth()->user()->id)
             ->get();
     }
 
@@ -173,6 +181,19 @@ class QuotationService
             'checklist_before_submit' => $request->checklist_before_submit,
             'status' => config('soisoft.tender_proposal_status.proposed'),
         ]);
+
+        if(isset($request->items))
+        {
+            foreach($request->items as $item)
+            {
+                BidQuotationItem::create([
+                    'bidder_id' => auth()->user()->id,
+                    'quotation_item_id' => $item['quotation_item_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                ]);
+            }
+        }
     }
 
     public function cancelQuotationProposal($request, $id)

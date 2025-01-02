@@ -24,13 +24,24 @@ Route::get('/test-email', function() {
     // $quotation = Tender::where('tender_state', 'published')->first();
     
     // $details = [
-    //     'title' => $quotation->tender_title,
-    //     'category' => $quotation->category->name,
-    //     'deadline' => $quotation->end_datetime,
-    //     'url' => 'https://mptc.soisoft.com/quotations/'.$quotation->id 
+    //     'title' => 'Test Email',
+    //     'category' => 'Test category',
+    //     'deadline' => "blahblah",
+    //     'url' => 'https://mptc.soisoft.com/quotations/' 
     // ];
    
     // Mail::to(['konaingwin01@gmail.com'])->send(new \App\Mail\NewTender($details));
+
+    //Send congratulation mail to bidder
+    $details = [
+        'title' => 'Test',
+        'category' => "Blah blah",
+        'supplier' => "Supplier name"
+    ];
+    Mail::to(['konaingwin01@gmail.com'])->send(new \App\Mail\Awarded($details));
+
+    //Send to all participate suppliers
+    Mail::to(['konaingwin01@gmail.com'])->send(new \App\Mail\AwardedNotification($details));
    
     dd("Email is Sent.");
 });

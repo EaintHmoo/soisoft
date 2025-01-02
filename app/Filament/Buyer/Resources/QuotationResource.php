@@ -52,6 +52,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Support\Enums\VerticalAlignment;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use App\Filament\Buyer\Resources\QuotationResource\Pages;
+use Guava\FilamentClusters\Forms\Cluster;
 
 class QuotationResource extends Resource
 {
@@ -156,17 +157,42 @@ class QuotationResource extends Resource
                                             return Carbon::now()->addYear();
                                         })
                                         ->live()
-                                        ->afterStateUpdated(function (Set $set) {
-                                            $set('end_datetime', null);
+                                        ->afterStateUpdated(function (Set $set, Get $get) {
+                                            $end_in_days = $get('end_in_days');
+                                            if($end_in_days != null) {
+                                                $set('end_datetime', Carbon::parse($get('start_datetime'))->addDays((int) $end_in_days));
+                                            } else {
+                                                $set('end_datetime', null);
+                                            }
                                         }),
-                                
-                                    DateTimePicker::make('end_datetime')
-                                        ->label('End Date and Time')
-                                        ->required(fn(Get $get) => $get('quotation_state') != 'draft')
-                                        ->placeholder('Aug 28, 2024 12:00:00')
-                                        ->native(false)
-                                        ->minDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addDay())
-                                        ->maxDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addYear()),
+
+                                    Cluster::make([
+                                        Select::make('end_in_days')
+                                            ->placeholder('Days')
+                                            ->options([
+                                                7 => '7 Days',
+                                                14 => '14 Days',
+                                                21 => '21 Days',
+                                                30 => '30 Days',
+                                                60 => '60 Days',
+                                                90 => '90 Days'
+                                            ])
+                                            ->native(false)
+                                            ->live()
+                                            ->afterStateUpdated(function (Set $set, Get $get) {
+                                                $set('end_datetime', Carbon::parse($get('start_datetime'))->addDays((int) $get('end_in_days')));
+                                            }),
+
+                                        DateTimePicker::make('end_datetime')
+                                            ->label('End Date and Time')
+                                            ->required(fn(Get $get) => $get('quotation_state') != 'draft')
+                                            ->placeholder('Aug 28, 2024 12:00:00')
+                                            ->native(false)
+                                            ->minDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addDay())
+                                            ->maxDate(fn(Get $get) => Carbon::parse($get('start_datetime'))->addYear()),
+                                    ])
+                                    ->label('End Date and Time')
+                                    ->columns(3),
                                 ]),
 
                             Section::make('Sourcing Information') 
@@ -267,18 +293,18 @@ class QuotationResource extends Resource
                                         ->required(fn(Get $get) => $get('quotation_state') != 'draft')
                                         ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published'),
 
-                                    Grid::make(2)
-                                        ->schema([
-                                            Radio::make('is_partial_delivery')
-                                                ->label('Partial Delivery?')
-                                                ->options([
-                                                    true => 'Yes',
-                                                    false => 'No'
-                                                ])
-                                                ->default(true)
-                                                ->inline()
-                                                ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
-                                        ])
+                                    // Grid::make(2)
+                                    //     ->schema([
+                                    //         Radio::make('is_partial_delivery')
+                                    //             ->label('Partial Delivery?')
+                                    //             ->options([
+                                    //                 true => 'Yes',
+                                    //                 false => 'No'
+                                    //             ])
+                                    //             ->default(true)
+                                    //             ->inline()
+                                    //             ->disabled(fn(string $operation, Get $get, Quotation $quotation):bool => $operation == 'edit' && $get('quotation_state') == 'published' && $quotation->quotation_state == 'published')
+                                    //     ])
                                 ]),
                             
                             Section::make('NDA') 
@@ -456,35 +482,35 @@ class QuotationResource extends Resource
                                         ->placeholder('Placeholder')
                                         ->columnSpanFull(),
 
-                                    Section::make('Cost Guide')
-                                        ->schema([
-                                            TextInput::make('company_estimated_unit_price')
-                                                ->placeholder('000.00')
-                                                ->numeric(),
+                                    // Section::make('Cost Guide')
+                                    //     ->schema([
+                                    //         TextInput::make('company_estimated_unit_price')
+                                    //             ->placeholder('000.00')
+                                    //             ->numeric(),
 
-                                            TextInput::make('historical_unit_price')
-                                                ->placeholder('000.00')
-                                                ->numeric(),
-                                        ])
-                                        ->columns(2),
+                                    //         TextInput::make('historical_unit_price')
+                                    //             ->placeholder('000.00')
+                                    //             ->numeric(),
+                                    //     ])
+                                    //     ->columns(2),
 
-                                    Section::make('Delivery Info')
-                                        ->schema([
-                                            Checkbox::make('same_as_header_address')
-                                                ->default(true)
-                                                ->live()
-                                                ->columnSpanFull(),
+                                    // Section::make('Delivery Info')
+                                    //     ->schema([
+                                    //         Checkbox::make('same_as_header_address')
+                                    //             ->default(true)
+                                    //             ->live()
+                                    //             ->columnSpanFull(),
                                             
-                                            TextInput::make('delivery_contact_person')
-                                                ->label('Contact Person Info')
-                                                ->placeholder('Placeholder')
-                                                ->disabled(fn (Get $get): bool => $get('same_as_header_address')),
+                                    //         TextInput::make('delivery_contact_person')
+                                    //             ->label('Contact Person Info')
+                                    //             ->placeholder('Placeholder')
+                                    //             ->disabled(fn (Get $get): bool => $get('same_as_header_address')),
 
-                                            Textarea::make('delivery_address')
-                                                ->placeholder('Placeholder')
-                                                ->disabled(fn (Get $get): bool => $get('same_as_header_address')),
-                                        ])
-                                        ->columns(2)
+                                    //         Textarea::make('delivery_address')
+                                    //             ->placeholder('Placeholder')
+                                    //             ->disabled(fn (Get $get): bool => $get('same_as_header_address')),
+                                    //     ])
+                                    //     ->columns(2)
 
                                 ])
                                 ->columns(3)
@@ -598,9 +624,10 @@ class QuotationResource extends Resource
                                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                                             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                                            'text/plain'
+                                            'text/plain',
+                                            'application/zip'
                                         ])
-                                        ->helperText('Support Types: docx, xlsx, pdf, pptx, txt.')
+                                        ->helperText('Support Types: zip, docx, xlsx, pdf, pptx, txt.')
                                         ->directory('tender-documents')
                                         ->columnSpanFull(),
 
@@ -930,16 +957,16 @@ class QuotationResource extends Resource
                             ->label('Delivery Address')
                             ->view('infolists.components.custom-entry'),
 
-                        TextEntry::make('is_partial_delivery')
-                            ->label('Partial Delivery?')
-                            ->formatStateUsing(function (string $state) {
-                                if($state) {
-                                    return "Yes";
-                                }
-                                return 'No';
-                            })
-                            ->badge()
-                            ->view('infolists.components.custom-entry'),
+                        // TextEntry::make('is_partial_delivery')
+                        //     ->label('Partial Delivery?')
+                        //     ->formatStateUsing(function (string $state) {
+                        //         if($state) {
+                        //             return "Yes";
+                        //         }
+                        //         return 'No';
+                        //     })
+                        //     ->badge()
+                        //     ->view('infolists.components.custom-entry'),
                     ]),
 
                 Overview::make('Contact Information')

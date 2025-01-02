@@ -50,6 +50,7 @@ class Tender extends Model
         'publication_check_list',
         'tender_state',
         'tender_status',
+        'end_in_days'
     ];
 
     protected $casts = [
