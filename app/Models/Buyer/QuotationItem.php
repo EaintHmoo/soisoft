@@ -4,6 +4,7 @@ namespace App\Models\Buyer;
 
 use App\Models\Buyer\Quotation;
 use App\Models\Admin\Category;
+use App\Models\BidQuotationItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,5 +44,10 @@ class QuotationItem extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function bidItem()
+    {
+        return $this->hasMany(BidQuotationItem::class, 'quotation_item_id','id');
     }
 }

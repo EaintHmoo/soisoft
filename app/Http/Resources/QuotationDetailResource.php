@@ -32,6 +32,7 @@ class QuotationDetailResource extends JsonResource
             'same_as_header_address' => $this->same_as_header_address,
             'delivery_contact_person' => $this->delivery_contact_person,
             'delivery_address' => $this->delivery_address,
+            'is_bidded' => $this->bidItem()->where('bidder_id',auth()->id())->exists(),
         ];
     }
 }
